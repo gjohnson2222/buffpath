@@ -3389,6 +3389,33 @@ class Component extends DCLogic {
   .bp-rv-item .bp-rv-badge[data-sev="nitpick"] { background: #eef0ff; color: #4338ca; }
   .bp-rv-item .bp-rv-screen { color: #9ca3af; font-size: 10px; margin-top: 3px; }
   .bp-rv-empty { padding: 20px 14px; font-size: 12px; color: #9ca3af; text-align: center; }
+
+  .bp-rv-dmark {
+    position: fixed; pointer-events: auto; width: 20px; height: 20px; margin-left: -10px; margin-top: -10px;
+    border-radius: 50%; background: #14151a; border: 2px solid #ffd23f; color: #ffd23f;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    font-size: 12px; font-weight: 800; font-family: -apple-system, system-ui, sans-serif;
+  }
+  .bp-rv-dpop {
+    position: fixed; pointer-events: auto; width: 280px; background: #14151a; color: #fff;
+    border-radius: 12px; padding: 14px; box-shadow: 0 20px 50px rgba(0,0,0,.45); font-size: 12px; line-height: 1.5;
+  }
+  .bp-rv-dpop .bp-rv-dpop-id { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #ffd23f; margin-bottom: 6px; }
+  .bp-rv-dpop .bp-rv-dpop-sum { font-weight: 700; margin-bottom: 8px; }
+  .bp-rv-dpop .bp-rv-dpop-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: #9ca3af; margin-top: 8px; }
+  .bp-rv-dpop .bp-rv-dpop-btn { margin-top: 12px; background: #5b3df5; color: #fff; border-radius: 7px; padding: 8px; text-align: center; font-weight: 700; cursor: pointer; }
+  .bp-rv-standing-btn {
+    position: fixed; right: 20px; bottom: 132px; pointer-events: auto; background: #14151a; color: #ffd23f;
+    border: 1.5px solid #ffd23f; border-radius: 999px; padding: 7px 12px; font-size: 11px; font-weight: 700; cursor: pointer;
+  }
+  .bp-rv-hide-tab {
+    position: fixed; right: 0; bottom: 20px; pointer-events: auto; background: #14151a; color: #fff;
+    border-radius: 8px 0 0 8px; padding: 8px 6px; font-size: 10px; font-weight: 700; writing-mode: vertical-rl; cursor: pointer; display: none;
+  }
+  #bp-rv-root[data-hidden="1"] .bp-rv-fab, #bp-rv-root[data-hidden="1"] .bp-rv-panel,
+  #bp-rv-root[data-hidden="1"] .bp-rv-banner, #bp-rv-root[data-hidden="1"] .bp-rv-pin,
+  #bp-rv-root[data-hidden="1"] .bp-rv-dmark, #bp-rv-root[data-hidden="1"] .bp-rv-standing-btn { display: none !important; }
+  #bp-rv-root[data-hidden="1"] .bp-rv-hide-tab { display: block; }
 </style>
 
 <div id="bp-rv-root">
@@ -3398,10 +3425,15 @@ class Component extends DCLogic {
     <span id="bp-rv-fab-label">Comment mode: off</span>
     <span class="bp-rv-count" id="bp-rv-count">0</span>
   </div>
+  <div class="bp-rv-standing-btn" id="bp-rv-standing-btn">Standing decisions</div>
+  <div class="bp-rv-hide-tab" id="bp-rv-hide-tab">show review layer</div>
   <div class="bp-rv-panel" id="bp-rv-panel">
     <div class="bp-rv-panel-head" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
       <span>Pins</span>
-      <span id="bp-rv-whoami" style="text-transform:none;font-weight:600;cursor:pointer;color:#5b3df5"></span>
+      <span style="display:flex;align-items:center;gap:10px">
+        <span id="bp-rv-hide-link" style="text-transform:none;font-weight:600;cursor:pointer;color:#9ca3af">hide layer</span>
+        <span id="bp-rv-whoami" style="text-transform:none;font-weight:600;cursor:pointer;color:#5b3df5"></span>
+      </span>
     </div>
     <div style="padding:10px 14px;border-bottom:1px solid #eee;display:flex;gap:6px;align-items:center">
       <select id="bp-rv-filter" style="flex:1;font-size:12px;border:1.5px solid #d8d8dc;border-radius:6px;padding:5px 6px;font-family:inherit"></select>
@@ -3420,7 +3452,48 @@ class Component extends DCLogic {
   "use strict";
   var STORE_KEY = "bp-review-pins-v1";
   var IDENTITY_KEY = "bp-review-identity-v1";
-  var state = { active: false, pins: [], filterAuthor: "all" };
+  var state = { active: false, pins: [], filterAuthor: "all", hidden: false };
+
+  // Decisions from docs/decisions.md. `target` maps a decision to a live UI
+  // element via a tag + a substring its rendered textContent must contain
+  // (not an exact match — several of these labels sit inside otherwise
+  // dynamic text, e.g. a tracker row's resume name). Decisions with no
+  // target render only in the "standing decisions" panel, per the approved
+  // mapping table — never forced onto an unrelated element.
+  var DECISIONS = [
+    { id: "D1", summary: "Three tiers replace a single ranked feed.", why: "A flat list implies every posting deserves the same effort. Contest-based sorting tells students something they can't see themselves.", reverse: "Testing shows students ignore tier headers and treat the board as one scrolling list anyway.", target: { tag: "p", contains: "Fast-applying here does nothing" } },
+    { id: "D2", summary: "Tiers sort on applicant volume, not fit.", why: "Fit-based sorting tells a student what they already suspect. Contest-based sorting is information they can't see on their own.", reverse: "If volume data proves unobtainable at scale, Priority gets inferred from proxies and the tier becomes softer.", target: { tag: "div", contains: "applicants last cycle" } },
+    { id: "D3", summary: "No application caps — tier is sorting, not rationing.", why: "Capping applications takes away the only thing a student controls, while employers face no equivalent limit. The friction of writing a real line is already a natural cap.", reverse: "Evidence that students spam Priority applications with throwaway lines.", target: null },
+    { id: "D4", summary: "Comment-to-apply, Priority only.", why: "Mass-applying is rational in a system that rewards volume — the only fix is making volume impossible where it fails hardest.", reverse: "Students refusing to write the line — this is validation priority #1.", target: { tag: "h3", contains: "Pick one thing" } },
+    { id: "D5", summary: "Resume stays the primary object.", why: "A parallel profile means maintaining two representations of yourself. The resume is the one employers actually receive.", reverse: "N/A — explicitly chosen by the project owner.", target: { tag: "div", contains: "Your resume is what every requirement is measured against" } },
+    { id: "D6", summary: "Requirements shown in three states, individually — no aggregate score.", why: "A single number is unfalsifiable and unactionable. The three-state split is actionable in different ways.", reverse: "Testing shows the middle state reads as noise rather than sending students to their resume.", target: { tag: "div", contains: "You worded it differently" } },
+    { id: "D7", summary: "Every extracted requirement is dismissible.", why: "Extraction will be wrong. Dismissal makes the student the final authority and is a useful correction signal.", reverse: "N/A — settled.", target: { tag: "div", contains: "Dismiss anything we read wrong" } },
+    { id: "D8", summary: "Rewording never happens silently.", why: "Auto-editing the resume is a straight line to keyword-stuffing, which harms students and degrades signal for employers.", reverse: "N/A — settled.", target: { tag: "button", contains: "Match their wording" } },
+    { id: "D9", summary: "Application status splits by source (synced vs. self-reported).", why: "An app can't see inside an employer's ATS for a posting found on a public board. Stating the source per row makes the limitation legible instead of embarrassing.", reverse: "N/A — this is what makes the no-integration fallback survivable.", target: { tag: "div", contains: "Self-reported" } },
+    { id: "D10", summary: "Last Call means closing soon AND unapplied.", why: "The alternative readings all make Last Call a bin for bad postings, training students to ignore it.", reverse: "N/A — settled.", target: { tag: "p", contains: "Closing inside three days, and you haven't applied" } },
+    { id: "D11", summary: "Notifications are Last Call only.", why: "A contested role isn't an emergency; a deadline is. Pushing Priority would train students to open the app anxious.", reverse: "N/A — settled.", target: { tag: "button", contains: "Notifications" } },
+    { id: "D12", summary: "The app is designed to be finishable.", why: "Every retention mechanic rewards time spent over outcome. An empty deck saying 'nothing else needs your attention' is a feature.", reverse: "N/A — settled.", target: { tag: "h3", contains: "Basic is clear" } },
+    { id: "D13", summary: "First-years and juniors share one app.", why: "Two apps is twice the surface for one audience that graduates into the other. Prep cards in the same deck give a no-experience student a next action.", reverse: "A first-year with a thin resume sees mostly missing requirements — could read as discouraging. Untested, provisional.", target: null },
+    { id: "D14", summary: "Prep steps are cards in the deck, not a separate section.", why: "A separate 'improve yourself' tab is a tab nobody opens. Prep arrives at the moment of the gap.", reverse: "N/A — settled.", target: { tag: "div", contains: "not a posting" } },
+    { id: "D15", summary: "Leeds alumni is structured mentor matching, not browsing.", why: "Directory-plus-cold-outreach puts the burden on the student least equipped to do it, and alumni burn out on unstructured requests.", reverse: "N/A — chosen by the project owner.", target: { tag: "h3", contains: "A Leeds alum, matched to you for one semester" } },
+    { id: "D16", summary: "The recruiter preview is shown before submitting.", why: "Closes the loop on D4 — a student writing a line needs to see it's genuinely the first thing read.", reverse: "This is a claim about employer-side behavior. Should be verified with Career Services before it ships as a promise.", target: { tag: "h3", contains: "What the recruiter sees" } }
+  ];
+  function decisionById(id) { return DECISIONS.filter(function (d) { return d.id === id; })[0] || null; }
+  function normText(s) { return (s || "").replace(/\s+/g, " ").trim(); }
+  // Picks the SHORTEST-text matching element, not the first in document
+  // order — ancestors always list before their children in querySelectorAll,
+  // and an ancestor's textContent includes all its children's text too, so
+  // "first match" silently grabs a giant wrapper instead of the specific
+  // element. Shortest qualifying text = most specific/innermost match.
+  function resolveDecisionTarget(t) {
+    if (!t) return null;
+    var els = Array.prototype.filter.call(document.querySelectorAll(t.tag), function (el) {
+      return normText(el.textContent).indexOf(t.contains) !== -1;
+    });
+    if (!els.length) return null;
+    els.sort(function (a, b) { return normText(a.textContent).length - normText(b.textContent).length; });
+    return els[0];
+  }
 
   function load() {
     try {
@@ -3625,6 +3698,13 @@ class Component extends DCLogic {
             ["blocker","worth-fixing","nitpick"].map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join("") +
           '</select></div>' +
         '</div>' +
+        '<div class="bp-rv-field" id="bp-rv-f-decision-wrap" style="display:none">' +
+          '<label>Which decision are you challenging?</label>' +
+          '<select id="bp-rv-f-decision">' +
+            '<option value="">— pick one —</option>' +
+            DECISIONS.map(function(d){return '<option value="'+d.id+'">'+d.id+' — '+escapeHtml(d.summary)+'</option>';}).join("") +
+          '</select>' +
+        '</div>' +
         '<div class="bp-rv-actions">' +
           (isNew ? '' : '<div class="bp-rv-btn bp-rv-btn-danger" id="bp-rv-f-delete">Delete</div>') +
           '<div class="bp-rv-btn bp-rv-btn-secondary" id="bp-rv-f-cancel">Cancel</div>' +
@@ -3635,6 +3715,14 @@ class Component extends DCLogic {
     document.getElementById("bp-rv-f-text").value = pin.text || "";
     document.getElementById("bp-rv-f-cat").value = pin.category || "ux";
     document.getElementById("bp-rv-f-sev").value = pin.severity || "worth-fixing";
+    var decWrap = document.getElementById("bp-rv-f-decision-wrap");
+    var decSel = document.getElementById("bp-rv-f-decision");
+    decSel.value = pin.decisionId || "";
+    function syncDecisionVisibility() {
+      decWrap.style.display = document.getElementById("bp-rv-f-cat").value === "decision-challenge" ? "block" : "none";
+    }
+    syncDecisionVisibility();
+    document.getElementById("bp-rv-f-cat").addEventListener("change", syncDecisionVisibility);
     document.getElementById("bp-rv-f-cancel").onclick = function () {
       if (isNew) state.pins = state.pins.filter(function (p) { return p.id !== pin.id; });
       closeModal(); render();
@@ -3648,6 +3736,7 @@ class Component extends DCLogic {
       pin.text = document.getElementById("bp-rv-f-text").value;
       pin.category = document.getElementById("bp-rv-f-cat").value;
       pin.severity = document.getElementById("bp-rv-f-sev").value;
+      pin.decisionId = pin.category === "decision-challenge" ? (decSel.value || null) : null;
       if (!isNew || pin.text.trim()) {
         if (isNew && state.pins.indexOf(pin) === -1) state.pins.push(pin);
         save();
@@ -3687,6 +3776,105 @@ class Component extends DCLogic {
     });
   }
 
+  function positionDecisionMarkers() {
+    var layer = document.getElementById("bp-rv-dmarks-layer");
+    if (!layer) return;
+    layer.innerHTML = "";
+    DECISIONS.forEach(function (d) {
+      if (!d.target) return;
+      var el = resolveDecisionTarget(d.target);
+      if (!el) return;
+      var r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) return;
+      var dot = document.createElement("div");
+      dot.className = "bp-rv-dmark";
+      dot.style.left = (r.right) + "px";
+      dot.style.top = (r.top) + "px";
+      dot.textContent = "i";
+      dot.title = d.id;
+      dot.onclick = function (ev) { ev.stopPropagation(); ev.preventDefault(); openDecisionPopover(d, dot, el); };
+      layer.appendChild(dot);
+    });
+  }
+
+  function closeDecisionPopover() {
+    var p = document.getElementById("bp-rv-dpop");
+    if (p) p.remove();
+  }
+
+  // `dot` (the marker) positions the popover; `targetEl` (the real app
+  // element the marker points at) is what a "Flag it" pin actually
+  // describes — these must NOT be the same element, or the resulting pin's
+  // screen/fingerprint would describe our own marker instead of the app.
+  function openDecisionPopover(d, dot, targetEl) {
+    closeDecisionPopover();
+    var r = dot.getBoundingClientRect();
+    var pop = document.createElement("div");
+    pop.className = "bp-rv-dpop";
+    pop.id = "bp-rv-dpop";
+    var left = Math.min(r.left, window.innerWidth - 296);
+    var top = Math.min(r.bottom + 6, window.innerHeight - 220);
+    pop.style.left = Math.max(8, left) + "px";
+    pop.style.top = Math.max(8, top) + "px";
+    pop.innerHTML =
+      '<div class="bp-rv-dpop-id">' + d.id + ' &middot; deliberate decision</div>' +
+      '<div class="bp-rv-dpop-sum">' + escapeHtml(d.summary) + '</div>' +
+      '<div class="bp-rv-dpop-label">Why</div><div>' + escapeHtml(d.why) + '</div>' +
+      '<div class="bp-rv-dpop-label">What would reverse it</div><div>' + escapeHtml(d.reverse) + '</div>' +
+      '<div class="bp-rv-dpop-btn" id="bp-rv-dpop-challenge">Still think it’s wrong? Flag it</div>';
+    document.getElementById("bp-rv-root").appendChild(pop);
+    document.getElementById("bp-rv-dpop-challenge").onclick = function () {
+      closeDecisionPopover();
+      startDecisionChallenge(d, targetEl);
+    };
+    setTimeout(function () {
+      document.addEventListener("click", closeDecisionPopover, { once: true, capture: true });
+    }, 0);
+  }
+
+  function startDecisionChallenge(d, targetEl) {
+    if (!getIdentity()) {
+      openIdentityModal(function (name) {
+        if (name) { setIdentity(name); updateWhoami(); startDecisionChallenge(d, targetEl); }
+      });
+      return;
+    }
+    var pin = {
+      id: "p" + Date.now() + Math.random().toString(36).slice(2, 7),
+      author: getIdentity() || "(unnamed)",
+      screen: screenLabelFor(targetEl),
+      fp: fingerprint(targetEl),
+      relX: 0.5, relY: 0.5,
+      text: "", category: "decision-challenge", severity: "worth-fixing",
+      decisionId: d.id,
+      ts: new Date().toISOString()
+    };
+    openModal(pin, true);
+  }
+
+  function openStandingDecisions() {
+    closeModal();
+    var backdrop = document.createElement("div");
+    backdrop.className = "bp-rv-modal-backdrop";
+    backdrop.id = "bp-rv-modal-backdrop";
+    var standing = DECISIONS.filter(function (d) { return !d.target; });
+    backdrop.innerHTML =
+      '<div class="bp-rv-modal">' +
+        '<h3>Standing decisions</h3>' +
+        '<div class="bp-rv-sub">These don’t map to one screen element, but they’re still deliberate — listed here instead of forced onto something unrelated.</div>' +
+        standing.map(function (d) {
+          return '<div style="padding:10px 0;border-top:1px solid #eee">' +
+            '<div style="font-weight:800;font-size:12px;color:#5b3df5">' + d.id + '</div>' +
+            '<div style="font-weight:700;margin:4px 0">' + escapeHtml(d.summary) + '</div>' +
+            '<div style="font-size:12px;color:#4b5563">' + escapeHtml(d.why) + '</div>' +
+          '</div>';
+        }).join("") +
+        '<div class="bp-rv-actions"><div class="bp-rv-btn bp-rv-btn-secondary" id="bp-rv-f-cancel" style="flex:1">Close</div></div>' +
+      '</div>';
+    document.getElementById("bp-rv-root").appendChild(backdrop);
+    document.getElementById("bp-rv-f-cancel").onclick = closeModal;
+  }
+
   function renderList() {
     var list = document.getElementById("bp-rv-list");
     var pins = visiblePins();
@@ -3699,6 +3887,7 @@ class Component extends DCLogic {
       return '<div class="bp-rv-item" data-id="' + p.id + '">' +
         '<span class="bp-rv-badge" data-sev="' + p.severity + '">' + p.severity + '</span>' +
         '<span class="bp-rv-badge">' + p.category + '</span>' +
+        (p.decisionId ? '<span class="bp-rv-badge" style="background:#fff8e0;color:#92400e">' + p.decisionId + '</span>' : '') +
         '<div>#' + (dn[p.id] || "?") + ' — ' + escapeHtml((p.text || "(no comment)").slice(0, 60)) + '</div>' +
         '<div class="bp-rv-screen">' + escapeHtml(p.screen) + (p.author ? " · " + escapeHtml(p.author) : "") + '</div>' +
       '</div>';
@@ -3716,6 +3905,7 @@ class Component extends DCLogic {
     updateCount();
     populateFilter();
     positionPins();
+    positionDecisionMarkers();
     renderList();
     updateWhoami();
   }
@@ -3751,6 +3941,15 @@ class Component extends DCLogic {
     document.getElementById("bp-rv-root").appendChild(layer);
     Array.prototype.forEach.call(layer.parentNode.querySelectorAll(".bp-rv-pin"), function (n) { n.style.pointerEvents = "auto"; });
 
+    var dlayer = document.createElement("div");
+    dlayer.id = "bp-rv-dmarks-layer";
+    dlayer.style.position = "fixed";
+    dlayer.style.inset = "0";
+    dlayer.style.pointerEvents = "none";
+    document.getElementById("bp-rv-root").appendChild(dlayer);
+
+    function repositionAll() { positionPins(); positionDecisionMarkers(); }
+
     fab().addEventListener("click", function () { setActive(!state.active); });
     panel().addEventListener("click", function (ev) { ev.stopPropagation(); });
     document.getElementById("bp-rv-count").parentElement.addEventListener("dblclick", function (ev) {
@@ -3758,9 +3957,22 @@ class Component extends DCLogic {
       panel().setAttribute("data-show", panel().getAttribute("data-show") === "1" ? "0" : "1");
     });
     document.addEventListener("click", onDocClick, true);
-    window.addEventListener("resize", positionPins);
-    window.addEventListener("scroll", positionPins, true);
-    setInterval(positionPins, 600);
+    window.addEventListener("resize", repositionAll);
+    window.addEventListener("scroll", repositionAll, true);
+    setInterval(repositionAll, 600);
+
+    document.getElementById("bp-rv-standing-btn").addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      openStandingDecisions();
+    });
+    document.getElementById("bp-rv-hide-link").addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      document.getElementById("bp-rv-root").setAttribute("data-hidden", "1");
+    });
+    document.getElementById("bp-rv-hide-tab").addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      document.getElementById("bp-rv-root").setAttribute("data-hidden", "0");
+    });
 
     document.getElementById("bp-rv-whoami").addEventListener("click", function (ev) {
       ev.stopPropagation();
