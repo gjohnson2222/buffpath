@@ -42,3 +42,5 @@ Wrapping `prototypes/BuffPath Internships v2.dc.html` so a non-technical reviewe
 
 ## Deploy troubleshooting note (2026-08-27)
 Vercel's GitHub auto-deploy wasn't connected initially; reconnected via Settings > Git, then removed/re-added the buffpath-eight.vercel.app domain to force a clean rebind. This commit exists specifically to trigger a genuinely fresh deployment (not a Redeploy-of-old-commit) to confirm the fix worked.
+
+Confirmed: GitHub connection to Vercel was not actually established until just now (Settings > Git showed "Connected just now" after the fix) — every prior redeploy/push attempt before this had no live webhook to trigger. This commit is the first real test of the fixed connection.
