@@ -3399,8 +3399,19 @@ class Component extends DCLogic {
     <span class="bp-rv-count" id="bp-rv-count">0</span>
   </div>
   <div class="bp-rv-panel" id="bp-rv-panel">
-    <div class="bp-rv-panel-head">Pins</div>
+    <div class="bp-rv-panel-head" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <span>Pins</span>
+      <span id="bp-rv-whoami" style="text-transform:none;font-weight:600;cursor:pointer;color:#5b3df5"></span>
+    </div>
+    <div style="padding:10px 14px;border-bottom:1px solid #eee;display:flex;gap:6px;align-items:center">
+      <select id="bp-rv-filter" style="flex:1;font-size:12px;border:1.5px solid #d8d8dc;border-radius:6px;padding:5px 6px;font-family:inherit"></select>
+    </div>
     <div id="bp-rv-list"></div>
+    <div style="padding:10px 14px;border-top:1px solid #eee;display:flex;gap:8px">
+      <div class="bp-rv-btn bp-rv-btn-secondary" id="bp-rv-export" style="font-size:12px;padding:8px">Export JSON</div>
+      <div class="bp-rv-btn bp-rv-btn-secondary" id="bp-rv-import-btn" style="font-size:12px;padding:8px">Import JSON</div>
+      <input type="file" id="bp-rv-import-file" accept="application/json" style="display:none">
+    </div>
   </div>
 </div>
 
@@ -3408,7 +3419,8 @@ class Component extends DCLogic {
 (function () {
   "use strict";
   var STORE_KEY = "bp-review-pins-v1";
-  var state = { active: false, pins: [] };
+  var IDENTITY_KEY = "bp-review-identity-v1";
+  var state = { active: false, pins: [], filterAuthor: "all" };
 
   function load() {
     try {
@@ -3418,6 +3430,83 @@ class Component extends DCLogic {
   }
   function save() {
     try { window.localStorage.setItem(STORE_KEY, JSON.stringify(state.pins)); } catch (e) {}
+  }
+  function getIdentity() {
+    try { return window.localStorage.getItem(IDENTITY_KEY) || ""; } catch (e) { return ""; }
+  }
+  function setIdentity(name) {
+    try { window.localStorage.setItem(IDENTITY_KEY, name); } catch (e) {}
+  }
+
+  // Display numbers are recomputed fresh every render, in chronological
+  // (ts) order across ALL currently-loaded pins — including ones just
+  // imported from someone else. This is what keeps numbers unique and
+  // stable after merging multiple reviewers' exports, instead of two
+  // people's "pin #1" colliding on screen.
+  function displayNumberMap() {
+    var sorted = state.pins.slice().sort(function (a, b) { return (a.ts || "").localeCompare(b.ts || ""); });
+    var map = {};
+    sorted.forEach(function (p, i) { map[p.id] = i + 1; });
+    return map;
+  }
+
+  function authorsPresent() {
+    var seen = {};
+    state.pins.forEach(function (p) { seen[p.author || "(unnamed)"] = true; });
+    return Object.keys(seen).sort();
+  }
+
+  function populateFilter() {
+    var sel = document.getElementById("bp-rv-filter");
+    var authors = authorsPresent();
+    var prev = state.filterAuthor;
+    sel.innerHTML = '<option value="all">All reviewers (' + state.pins.length + ')</option>' +
+      authors.map(function (a) {
+        var n = state.pins.filter(function (p) { return (p.author || "(unnamed)") === a; }).length;
+        return '<option value="' + escapeHtml(a) + '">' + escapeHtml(a) + ' (' + n + ')</option>';
+      }).join("");
+    sel.value = authors.indexOf(prev) >= 0 || prev === "all" ? prev : "all";
+    state.filterAuthor = sel.value;
+  }
+
+  function visiblePins() {
+    if (state.filterAuthor === "all") return state.pins;
+    return state.pins.filter(function (p) { return (p.author || "(unnamed)") === state.filterAuthor; });
+  }
+
+  function exportJSON() {
+    var payload = { exportedBy: getIdentity() || "(unnamed)", exportedAt: new Date().toISOString(), pins: state.pins };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    var safeName = (getIdentity() || "session").replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+    a.href = url;
+    a.download = "buffpath-review-" + safeName + "-" + Date.now() + ".json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function importJSON(file) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var data;
+      try { data = JSON.parse(String(reader.result)); }
+      catch (e) { alert("That file isn't a BuffPath review export — could not read it as JSON."); return; }
+      var incoming = Array.isArray(data) ? data : (data && data.pins) || [];
+      var existing = {};
+      state.pins.forEach(function (p) { existing[p.id] = true; });
+      var added = 0;
+      incoming.forEach(function (p) {
+        if (p && p.id && !existing[p.id]) { state.pins.push(p); added++; existing[p.id] = true; }
+      });
+      save();
+      populateFilter();
+      render();
+      alert("Imported " + added + " new pin(s)" + (incoming.length - added > 0 ? " — " + (incoming.length - added) + " already present, skipped" : "") + ".");
+    };
+    reader.readAsText(file);
   }
 
   function screenLabelFor(el) {
@@ -3457,11 +3546,55 @@ class Component extends DCLogic {
   function banner() { return document.getElementById("bp-rv-banner"); }
   function panel() { return document.getElementById("bp-rv-panel"); }
 
-  function setActive(v) {
+  function applyActive(v) {
     state.active = v;
     fab().setAttribute("data-active", v ? "1" : "0");
     document.getElementById("bp-rv-fab-label").textContent = "Comment mode: " + (v ? "on" : "off");
     banner().setAttribute("data-show", v ? "1" : "0");
+  }
+
+  function setActive(v) {
+    if (v && !getIdentity()) {
+      openIdentityModal(function (name) {
+        if (name) { setIdentity(name); updateWhoami(); applyActive(true); }
+      });
+      return;
+    }
+    applyActive(v);
+  }
+
+  function updateWhoami() {
+    var el = document.getElementById("bp-rv-whoami");
+    if (!el) return;
+    var id = getIdentity();
+    el.textContent = id ? ("you: " + id) : "set your name";
+  }
+
+  function openIdentityModal(onDone) {
+    closeModal();
+    var backdrop = document.createElement("div");
+    backdrop.className = "bp-rv-modal-backdrop";
+    backdrop.id = "bp-rv-modal-backdrop";
+    backdrop.innerHTML =
+      '<div class="bp-rv-modal">' +
+        '<h3>Who’s leaving feedback?</h3>' +
+        '<div class="bp-rv-sub">Your name or initials — gets attached to every pin you leave, so multiple reviewers’ notes can be told apart later.</div>' +
+        '<div class="bp-rv-field"><input id="bp-rv-f-name" placeholder="e.g. Jordan W." style="width:100%;border:1.5px solid #d8d8dc;border-radius:8px;padding:8px 10px;font-size:13px"></div>' +
+        '<div class="bp-rv-actions">' +
+          '<div class="bp-rv-btn bp-rv-btn-secondary" id="bp-rv-f-cancel">Cancel</div>' +
+          '<div class="bp-rv-btn bp-rv-btn-primary" id="bp-rv-f-save">Continue</div>' +
+        '</div>' +
+      '</div>';
+    document.getElementById("bp-rv-root").appendChild(backdrop);
+    var input = document.getElementById("bp-rv-f-name");
+    input.value = getIdentity();
+    input.focus();
+    document.getElementById("bp-rv-f-cancel").onclick = function () { closeModal(); onDone(null); };
+    document.getElementById("bp-rv-f-save").onclick = function () {
+      var v = input.value.trim();
+      closeModal();
+      onDone(v || null);
+    };
   }
 
   function updateCount() {
@@ -3478,10 +3611,11 @@ class Component extends DCLogic {
     var backdrop = document.createElement("div");
     backdrop.className = "bp-rv-modal-backdrop";
     backdrop.id = "bp-rv-modal-backdrop";
+    var dn = isNew ? (state.pins.length + 1) : (displayNumberMap()[pin.id] || "?");
     backdrop.innerHTML =
       '<div class="bp-rv-modal">' +
-        '<h3>' + (isNew ? "New pin #" + pin.n : "Pin #" + pin.n) + '</h3>' +
-        '<div class="bp-rv-sub">' + escapeHtml(pin.screen) + '</div>' +
+        '<h3>' + (isNew ? "New pin #" + dn : "Pin #" + dn) + '</h3>' +
+        '<div class="bp-rv-sub">' + escapeHtml(pin.screen) + (pin.author ? " · " + escapeHtml(pin.author) : "") + '</div>' +
         '<div class="bp-rv-field"><label>Comment</label><textarea id="bp-rv-f-text" placeholder="What did you notice?"></textarea></div>' +
         '<div class="bp-rv-row">' +
           '<div class="bp-rv-field"><label>Category</label><select id="bp-rv-f-cat">' +
@@ -3534,7 +3668,8 @@ class Component extends DCLogic {
     var layer = document.getElementById("bp-rv-pins-layer");
     if (!layer) return;
     layer.innerHTML = "";
-    state.pins.forEach(function (pin) {
+    var dn = displayNumberMap();
+    visiblePins().forEach(function (pin) {
       var el = resolveFingerprint(pin.fp);
       if (!el) return;
       var r = el.getBoundingClientRect();
@@ -3546,7 +3681,7 @@ class Component extends DCLogic {
       dot.setAttribute("data-sev", pin.severity);
       dot.style.left = x + "px";
       dot.style.top = y + "px";
-      dot.innerHTML = "<span>" + pin.n + "</span>";
+      dot.innerHTML = "<span>" + (dn[pin.id] || "?") + "</span>";
       dot.onclick = function (ev) { ev.stopPropagation(); ev.preventDefault(); openModal(pin, false); };
       layer.appendChild(dot);
     });
@@ -3554,16 +3689,18 @@ class Component extends DCLogic {
 
   function renderList() {
     var list = document.getElementById("bp-rv-list");
-    if (!state.pins.length) {
-      list.innerHTML = '<div class="bp-rv-empty">No pins yet. Turn on comment mode and click anything in the app.</div>';
+    var pins = visiblePins();
+    if (!pins.length) {
+      list.innerHTML = '<div class="bp-rv-empty">' + (state.pins.length ? "No pins from this reviewer." : "No pins yet. Turn on comment mode and click anything in the app.") + '</div>';
       return;
     }
-    list.innerHTML = state.pins.slice().reverse().map(function (p) {
+    var dn = displayNumberMap();
+    list.innerHTML = pins.slice().sort(function (a, b) { return (b.ts || "").localeCompare(a.ts || ""); }).map(function (p) {
       return '<div class="bp-rv-item" data-id="' + p.id + '">' +
         '<span class="bp-rv-badge" data-sev="' + p.severity + '">' + p.severity + '</span>' +
         '<span class="bp-rv-badge">' + p.category + '</span>' +
-        '<div>#' + p.n + ' — ' + escapeHtml((p.text || "(no comment)").slice(0, 60)) + '</div>' +
-        '<div class="bp-rv-screen">' + escapeHtml(p.screen) + '</div>' +
+        '<div>#' + (dn[p.id] || "?") + ' — ' + escapeHtml((p.text || "(no comment)").slice(0, 60)) + '</div>' +
+        '<div class="bp-rv-screen">' + escapeHtml(p.screen) + (p.author ? " · " + escapeHtml(p.author) : "") + '</div>' +
       '</div>';
     }).join("");
     Array.prototype.forEach.call(list.querySelectorAll(".bp-rv-item"), function (node) {
@@ -3577,8 +3714,10 @@ class Component extends DCLogic {
 
   function render() {
     updateCount();
+    populateFilter();
     positionPins();
     renderList();
+    updateWhoami();
   }
 
   function onDocClick(ev) {
@@ -3592,7 +3731,7 @@ class Component extends DCLogic {
     var relY = rect.height ? (ev.clientY - rect.top) / rect.height : 0.5;
     var pin = {
       id: "p" + Date.now() + Math.random().toString(36).slice(2, 7),
-      n: state.pins.length + 1,
+      author: getIdentity() || "(unnamed)",
       screen: screenLabelFor(el),
       fp: fingerprint(el),
       relX: relX, relY: relY,
@@ -3622,6 +3761,26 @@ class Component extends DCLogic {
     window.addEventListener("resize", positionPins);
     window.addEventListener("scroll", positionPins, true);
     setInterval(positionPins, 600);
+
+    document.getElementById("bp-rv-whoami").addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      openIdentityModal(function (name) { if (name) { setIdentity(name); updateWhoami(); } });
+    });
+    document.getElementById("bp-rv-filter").addEventListener("change", function (ev) {
+      state.filterAuthor = ev.target.value;
+      positionPins(); renderList();
+    });
+    document.getElementById("bp-rv-export").addEventListener("click", function (ev) { ev.stopPropagation(); exportJSON(); });
+    document.getElementById("bp-rv-import-btn").addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      document.getElementById("bp-rv-import-file").click();
+    });
+    document.getElementById("bp-rv-import-file").addEventListener("change", function (ev) {
+      var f = ev.target.files && ev.target.files[0];
+      if (f) importJSON(f);
+      ev.target.value = "";
+    });
+
     render();
     window.__bpReview = { getPins: function () { return state.pins.slice(); } };
   }
