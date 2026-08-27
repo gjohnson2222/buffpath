@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="_ds/modernist-61c7caaf-aecb-40c5-b834-61a5171af5d6/styles.css">
+<script src="_ds/modernist-61c7caaf-aecb-40c5-b834-61a5171af5d6/_ds_bundle.js"></script>
+<script src="./doc-page.js"></script>
+<style>
+doc-page:not(:defined){visibility:hidden}
+a{color:#ae1800}
+a:hover{color:#7c1405}
+</style>
+</helmet>
+
+<doc-page margin="0.85in">
+  <div style="font-family:Archivo,system-ui,sans-serif;color:var(--color-text);font-size:15px;line-height:1.62">
+
+    <div style="font:700 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--color-accent-700)">BuffPath · Working plan</div>
+
+    <h1 style="font:800 40px/1.04 Archivo,system-ui,sans-serif;letter-spacing:-.025em;margin:16px 0 0;text-wrap:balance">Taking this from prototype to something students can actually use</h1>
+
+    <p style="font:400 17px/1.55 Archivo,system-ui,sans-serif;color:var(--color-neutral-800);margin:16px 0 0;max-width:34em">The prototype answers what the app should be. This document covers what stands between it and a working product: whose permission you need, what to prove before writing production code, and what the app looks like if the institutional pieces never arrive.</p>
+
+    <div class="hr" style="margin:26px 0"></div>
+
+    <h2 style="font:800 13px/1 Archivo,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;margin:0 0 18px">1 · The three real constraints</h2>
+
+    <p style="margin:0 0 14px">Engineering is not the bottleneck. Three things gate this product, in descending order of difficulty.</p>
+
+    <div style="border-top:2px solid var(--color-divider);margin-bottom:8px">
+      <div style="padding:16px 0;border-bottom:1px solid var(--color-neutral-300);break-inside:avoid">
+        <div style="font:800 17px/1.2 Archivo,system-ui,sans-serif">Permission, not technology</div>
+        <p style="margin:9px 0 0;color:var(--color-neutral-800)">Everything distinctive in the design depends on data you do not own. Handshake postings, application status sync, applicant volume, CU hiring history, and the Leeds alumni pool all sit behind CU Career Services and Leeds Alumni Relations. None is available to a student project by default, and scraping Handshake is a terms-of-service problem rather than a technical one.</p>
+      </div>
+      <div style="padding:16px 0;border-bottom:1px solid var(--color-neutral-300);break-inside:avoid">
+        <div style="font:800 17px/1.2 Archivo,system-ui,sans-serif">Supply before demand</div>
+        <p style="margin:9px 0 0;color:var(--color-neutral-800)">An internship app with thin listings is worthless, and a student who opens it to an empty board does not come back. Public boards can be aggregated through their own feeds and APIs, so that is the floor. Tier sorting still works there; applicant volume mostly does not, which is why the prototype flags that assumption on its face.</p>
+      </div>
+      <div style="padding:16px 0;border-bottom:1px solid var(--color-neutral-300);break-inside:avoid">
+        <div style="font:800 17px/1.2 Archivo,system-ui,sans-serif">Seasonality</div>
+        <p style="margin:9px 0 0;color:var(--color-neutral-800)">Internship recruiting runs in windows. You get roughly two real shots a year at students who care, and missing one costs six months. This shapes the timeline more than the build does.</p>
+      </div>
+    </div>
+
+    <h2 style="font:800 13px/1 Archivo,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;margin:30px 0 18px">2 · Conversations to have first</h2>
+
+    <p style="margin:0 0 16px">Each of these is a short meeting that changes what you build. Have them before writing production code.</p>
+
+    <table class="table" style="font-size:14px">
+      <thead>
+        <tr>
+          <th style="width:26%">Who</th>
+          <th style="width:38%">What you are actually asking</th>
+          <th>What their answer decides</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>CU Career Services</td>
+          <td>Whether they would sponsor a Handshake integration, and what they would want in return</td>
+          <td>Whether the app you designed is buildable, or whether it becomes the public-boards version</td>
+        </tr>
+        <tr>
+          <td>Leeds Alumni Relations</td>
+          <td>Whether Mentor Match can be surfaced in a student app, and who owns the matching</td>
+          <td>Whether the alumni tab is a real feature or a link out</td>
+        </tr>
+        <tr>
+          <td>A Leeds faculty advisor</td>
+          <td>Which campus venture programs are currently running and taking applications</td>
+          <td>Funding, credit, and whether this becomes coursework</td>
+        </tr>
+        <tr>
+          <td>Two or three recruiters who hire CU interns</td>
+          <td>Whether a written line above a resume would change how they read an applicant</td>
+          <td>Whether the Priority tier's premise holds from the employer side</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 style="font:800 13px/1 Archivo,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;margin:30px 0 18px">3 · What to validate, in order</h2>
+
+    <p style="margin:0 0 16px">The cheapest useful next step is not code. It is fifteen students, the prototype on a phone, and watching where they hesitate.</p>
+
+    <div style="border-top:2px solid var(--color-divider)">
+      <div style="display:flex;gap:18px;padding:15px 0;border-bottom:1px solid var(--color-neutral-300);break-inside:avoid">
+        <div style="flex:none;width:22px;font:800 15px/1.3 Archivo,system-ui,sans-serif;color:var(--color-accent)">1</div>
+        <div>
+          <div style="font:700 16px/1.25 Archivo,system-ui,sans-serif">Does anyone write the Priority line?</div>
+          <p style="margin:8px 0 0;color:var(--color-neutral-800)">This is the one question no amount of design resolves. If the line reads as homework and students try to skip it, the whole differentiator collapses and you are building a nicer job board. Test this before anything else.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:18px;padding:15px 0;border-bottom:1px solid var(--color-neutral-300);break-inside:avoid">
+        <div style="flex:none;width:22px;font:800 15px/1.3 Archivo,system-ui,sans-serif;color:var(--color-accent)">2</div>
+        <div>
+          <div style="font:700 16px/1.25 Archivo,system-ui,sans-serif">Does the three-state requirement list change behavior?</div>
+          <p style="margin:8px 0 0;color:var(--color-neutral-800)">Watch whether "you worded it differently" actually sends someone to their resume, or whether it reads as noise. The met/reworded/missing split is only worth its complexity if the middle state moves people.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:18px;padding:15px 0;border-bottom:1px solid var(--color-neutral-300);break-inside:avoid">
+        <div style="flex:none;width:22px;font:800 15px/1.3 Archivo,system-ui,sans-serif;color:var(--color-accent)">3</div>
+        <div>
+          <div style="font:700 16px/1.25 Archivo,system-ui,sans-serif">Can extraction be trusted on real postings?</div>
+          <p style="margin:8px 0 0;color:var(--color-neutral-800)">Run twenty real postings through by hand and score the output yourself. If the parser is wrong often enough that students dismiss lines routinely, the feature teaches distrust rather than clarity.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:18px;padding:15px 0;border-bottom:1px solid var(--color-neutral-300);break-inside:avoid">
+        <div style="flex:none;width:22px;font:800 15px/1.3 Archivo,system-ui,sans-serif;color:var(--color-accent)">4</div>
+        <div>
+          <div style="font:700 16px/1.25 Archivo,system-ui,sans-serif">Do first-years and juniors need the same app?</div>
+          <p style="margin:8px 0 0;color:var(--color-neutral-800)">The prototype assumes yes, with class year changing content rather than structure. Worth confirming, because a first-year with an empty resume sees mostly missing requirements, and that could read as discouraging rather than honest.</p>
+        </div>
+      </div>
+    </div>
+
+    <h2 style="font:800 13px/1 Archivo,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;margin:30px 0 18px">4 · The fallback, if no integration happens</h2>
+
+    <p style="margin:0 0 14px">Assume Career Services says no, or says not yet. What survives:</p>
+
+    <div style="display:grid;grid-template-columns:1fr;gap:0;border-top:2px solid var(--color-divider)">
+      <div style="display:flex;gap:16px;padding:13px 0;border-bottom:1px solid var(--color-neutral-300);break-inside:avoid">
+        <div style="flex:none;width:98px;font:700 11px/1.3 Archivo,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700);padding-top:2px">Survives</div>
+        <div style="color:var(--color-neutral-800)">Requirement extraction, the three-state match against a resume, comment-to-apply, the tracker, deadline calendar, and Last Call. All of these run on public postings and the student's own resume.</div>
+      </div>
+      <div style="display:flex;gap:16px;padding:13px 0;border-bottom:1px solid var(--color-neutral-300);break-inside:avoid">
+        <div style="flex:none;width:98px;font:700 11px/1.3 Archivo,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600);padding-top:2px">Weakens</div>
+        <div style="color:var(--color-neutral-800)">Tiering. Without applicant counts, Priority has to be inferred from weaker signals: company size, whether the posting is a named program, how long it stays open. Workable, less defensible.</div>
+      </div>
+      <div style="display:flex;gap:16px;padding:13px 0;border-bottom:1px solid var(--color-neutral-300);break-inside:avoid">
+        <div style="flex:none;width:98px;font:700 11px/1.3 Archivo,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600);padding-top:2px">Goes away</div>
+        <div style="color:var(--color-neutral-800)">Automatic status sync, CU hiring history, and Leeds Mentor Match as an in-app flow. Status falls back to self-reported, which the design already handles; the alumni tab becomes a link to the existing program.</div>
+      </div>
+    </div>
+
+    <p style="margin:18px 0 0;color:var(--color-neutral-800)">Worth noting that the design already assumes this outcome in places. Every tracker row states whether its status is synced or self-reported, and the nudge card exists precisely because sync cannot be relied on. That is not an accident of the prototype; it is what makes the fallback survivable.</p>
+
+    <h2 style="font:800 13px/1 Archivo,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;margin:30px 0 18px">5 · Open questions</h2>
+
+    <ul style="margin:0;padding-left:20px;color:var(--color-neutral-800)">
+      <li style="margin-bottom:10px">Is this a CU Boulder product or a product that starts at CU Boulder? The answer changes whether institutional dependency is a moat or a ceiling.</li>
+      <li style="margin-bottom:10px">Who maintains it after you graduate? Campus tools die on this question more than any other.</li>
+      <li style="margin-bottom:10px">Does the employer side ever become real software, or does it stay a claim about what recruiters see? The prototype shows a recruiter card, and that promise should be verified before it ships.</li>
+      <li>What does success look like at the end of one recruiting season — installs, applications submitted, or internships accepted? Only the last one matters, and it is the hardest to measure.</li>
+    </ul>
+
+    <div class="hr" style="margin:26px 0 16px"></div>
+    <p style="font:400 13px/1.5 Archivo,system-ui,sans-serif;color:var(--color-neutral-600);margin:0">Companion to the BuffPath prototype, round 2. Specifics on campus programs change year to year and should be confirmed with a faculty advisor.</p>
+  </div>
+</doc-page>
+</x-dc>
+</body>
+</html>

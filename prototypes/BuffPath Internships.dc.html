@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="_ds/modernist-61c7caaf-aecb-40c5-b834-61a5171af5d6/styles.css">
+<script src="_ds/modernist-61c7caaf-aecb-40c5-b834-61a5171af5d6/_ds_bundle.js"></script>
+<style>
+body{margin:0;background:#f3f2f2}
+a{color:#ae1800;text-decoration:none}
+a:hover{color:#7c1405;text-decoration:underline}
+::-webkit-scrollbar{width:0;height:0}
+</style>
+</helmet>
+
+<div style="display:flex;gap:56px;padding:48px;align-items:flex-start;font-family:Archivo,system-ui,sans-serif;color:var(--color-text);background:var(--color-bg);min-height:100vh;box-sizing:border-box">
+
+  <div style="width:400px;flex:none;display:flex;flex-direction:column;gap:var(--space-6)">
+    <div>
+      <div style="font:600 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:10px">Prototype · Round 1</div>
+      <h1 style="font:800 40px/1.02 Archivo,system-ui,sans-serif;letter-spacing:-.02em;margin:0">BuffPath</h1>
+      <p style="font:400 15px/1.5 Archivo,system-ui,sans-serif;margin:12px 0 0;color:var(--color-neutral-800);text-wrap:pretty">An internship app for CU Boulder students. Merges CU Boulder Handshake postings with public boards, and routes students into Leeds alumni mentor matching when a posting is out of reach.</p>
+    </div>
+
+    <div class="hr"></div>
+
+    <div>
+      <div style="font:700 12px/1 Archivo,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px">Assumptions I made</div>
+      <ul style="margin:0;padding-left:18px;font:400 14px/1.6 Archivo,system-ui,sans-serif;color:var(--color-neutral-800);display:flex;flex-direction:column;gap:8px">
+        <li>Two audiences share one app: first- and second-years with no experience, and juniors hunting a summer role. Class year changes what the daily list is made of, not the navigation.</li>
+        <li>Fit is explained, never scored silently. Every card says which of three signals fired: your listed skills, Leeds alumni inside the company, and CU students hired before.</li>
+        <li>When nothing fits, the app hands back a prep step instead of a weak posting. Prep cards sit in the same daily deck as jobs.</li>
+        <li>Applying means picking one of your saved resume versions, not writing a new one.</li>
+      </ul>
+    </div>
+
+    <div>
+      <div style="font:700 12px/1 Archivo,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px">Signature interaction</div>
+      <p style="font:400 14px/1.6 Archivo,system-ui,sans-serif;margin:0;color:var(--color-neutral-800);text-wrap:pretty">Today's Six. A fixed, finishable daily deck. Swipe or tap right to save, left to pass. Six cards, then the deck is done and the app stops asking for attention.</p>
+    </div>
+
+    <div>
+      <div style="font:700 12px/1 Archivo,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px">Jump to a screen</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <button class="btn btn-secondary" style="font-size:12px;padding:7px 11px" onClick="{{ goOnboarding }}">Onboarding</button>
+        <button class="btn btn-secondary" style="font-size:12px;padding:7px 11px" onClick="{{ goToday }}">Today's Six</button>
+        <button class="btn btn-secondary" style="font-size:12px;padding:7px 11px" onClick="{{ goSearch }}">Search + filters</button>
+        <button class="btn btn-secondary" style="font-size:12px;padding:7px 11px" onClick="{{ goTracker }}">Tracker</button>
+        <button class="btn btn-secondary" style="font-size:12px;padding:7px 11px" onClick="{{ goCalendar }}">Deadlines</button>
+        <button class="btn btn-secondary" style="font-size:12px;padding:7px 11px" onClick="{{ goAlumni }}">Leeds alumni</button>
+        <button class="btn btn-secondary" style="font-size:12px;padding:7px 11px" onClick="{{ goProfile }}">Profile</button>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+
+    <div>
+      <div style="font:700 12px/1 Archivo,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px">What I'd do next</div>
+      <ul style="margin:0;padding-left:18px;font:400 14px/1.6 Archivo,system-ui,sans-serif;color:var(--color-neutral-800);display:flex;flex-direction:column;gap:8px">
+        <li>Interview prep as a real screen, keyed to a specific application in the tracker.</li>
+        <li>An empty-and-early state for a first-year in week one, when there is no skill list to match against yet.</li>
+        <li>Notification rules — what earns a push, and what waits for the daily deck.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="flex:none;display:flex;flex-direction:column;gap:16px;align-items:center;position:sticky;top:48px">
+    <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+      <div style="height:100%;display:flex;flex-direction:column;background:var(--color-bg);font-family:Archivo,system-ui,sans-serif;color:var(--color-text)">
+
+        <sc-if value="{{ isOnboarding }}">
+          <div style="flex:1;display:flex;flex-direction:column;padding:64px 24px 24px;box-sizing:border-box">
+            <div style="display:flex;gap:6px;margin-bottom:36px">
+              <div style="height:3px;flex:1;background:{{ ob1Bar }}"></div>
+              <div style="height:3px;flex:1;background:{{ ob2Bar }}"></div>
+              <div style="height:3px;flex:1;background:{{ ob3Bar }}"></div>
+            </div>
+
+            <sc-if value="{{ isOb1 }}">
+              <div style="flex:1;display:flex;flex-direction:column">
+                <div style="font:800 13px/1 Archivo,system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--color-accent)">BuffPath</div>
+                <h2 style="font:800 38px/1.05 Archivo,system-ui,sans-serif;letter-spacing:-.02em;margin:20px 0 0">Where are you in school?</h2>
+                <p style="font:400 15px/1.5 Archivo,system-ui,sans-serif;color:var(--color-neutral-700);margin:12px 0 28px">This sets what shows up in your daily six. You can change it any time.</p>
+                <div style="display:flex;flex-direction:column;gap:0;border-top:2px solid var(--color-divider)">
+                  <sc-for list="{{ years }}" as="y" hint-placeholder-count="4">
+                    <button style="all:unset;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:18px 4px;border-bottom:1px solid var(--color-neutral-300);font:600 17px/1 Archivo,system-ui,sans-serif;color:{{ y.color }}" onClick="{{ y.pick }}">
+                      <span>{{ y.label }}</span>
+                      <span style="font:700 12px/1 Archivo,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent)">{{ y.mark }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isOb2 }}">
+              <div style="flex:1;display:flex;flex-direction:column">
+                <div style="font:700 12px/1 Archivo,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-600)">Step 2 of 3</div>
+                <h2 style="font:800 34px/1.06 Archivo,system-ui,sans-serif;letter-spacing:-.02em;margin:16px 0 0">What can you already do?</h2>
+                <p style="font:400 15px/1.5 Archivo,system-ui,sans-serif;color:var(--color-neutral-700);margin:12px 0 22px">Tap everything that's true. Class projects count. This is the list we match postings against.</p>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  <sc-for list="{{ skills }}" as="s" hint-placeholder-count="10">
+                    <button style="all:unset;cursor:pointer;padding:9px 13px;font:600 13px/1 Archivo,system-ui,sans-serif;border:2px solid {{ s.border }};background:{{ s.bg }};color:{{ s.fg }}" onClick="{{ s.toggle }}">{{ s.label }}</button>
+                  </sc-for>
+                </div>
+                <div style="margin-top:auto;display:flex;flex-direction:column;gap:10px">
+                  <div style="font:400 13px/1.4 Archivo,system-ui,sans-serif;color:var(--color-neutral-600)">{{ skillCount }} selected · pick at least three</div>
+                  <button class="btn btn-primary btn-block" onClick="{{ obNext }}">Continue</button>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isOb3 }}">
+              <div style="flex:1;display:flex;flex-direction:column">
+                <div style="font:700 12px/1 Archivo,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-600)">Step 3 of 3</div>
+                <h2 style="font:800 34px/1.06 Archivo,system-ui,sans-serif;letter-spacing:-.02em;margin:16px 0 0">Connect your sources</h2>
+                <p style="font:400 15px/1.5 Archivo,system-ui,sans-serif;color:var(--color-neutral-700);margin:12px 0 22px">Postings come in merged and de-duplicated, so you see each role once.</p>
+                <div style="border-top:2px solid var(--color-divider)">
+                  <sc-for list="{{ sources }}" as="src" hint-placeholder-count="3">
+                    <button style="all:unset;cursor:pointer;display:flex;align-items:flex-start;gap:14px;padding:16px 4px;border-bottom:1px solid var(--color-neutral-300);width:100%;box-sizing:border-box" onClick="{{ src.toggle }}">
+                      <span style="width:20px;height:20px;flex:none;margin-top:2px;border:2px solid {{ src.border }};background:{{ src.bg }}"></span>
+                      <span style="display:flex;flex-direction:column;gap:3px;text-align:left">
+                        <span style="font:700 15px/1.2 Archivo,system-ui,sans-serif">{{ src.label }}</span>
+                        <span style="font:400 13px/1.4 Archivo,system-ui,sans-serif;color:var(--color-neutral-600)">{{ src.note }}</span>
+                      </span>
+                    </button>
+                  </sc-for>
+                </div>
+                <div style="margin-top:auto">
+                  <button class="btn btn-primary btn-block" onClick="{{ finishOnboarding }}">Build my first six</button>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
+          <div style="padding:58px 20px 14px;border-bottom:2px solid var(--color-divider);display:flex;align-items:flex-end;justify-content:space-between">
+            <div>
+              <div style="font:700 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--color-accent-700)">Monday, August 24</div>
+              <h2 style="font:800 27px/1 Archivo,system-ui,sans-serif;letter-spacing:-.02em;margin:8px 0 0">Today's Six</h2>
+            </div>
+            <div style="text-align:right">
+              <div style="font:800 27px/1 Archivo,system-ui,sans-serif;color:var(--color-accent)">{{ deckLeft }}</div>
+              <div style="font:600 10px/1 Archivo,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--color-neutral-600);margin-top:5px">left</div>
+            </div>
+          </div>
+
+          <div style="flex:1;overflow:auto;padding:20px 20px 12px;display:flex;flex-direction:column">
+            <sc-if value="{{ deckDone }}">
+              <div style="border:2px solid var(--color-divider);padding:26px 22px;background:var(--color-surface)">
+                <h3 style="font:800 24px/1.1 Archivo,system-ui,sans-serif;margin:0">That's your six.</h3>
+                <p style="font:400 15px/1.5 Archivo,system-ui,sans-serif;color:var(--color-neutral-700);margin:10px 0 20px">{{ deckSummary }} Nothing else needs your attention today.</p>
+                <button class="btn btn-secondary" onClick="{{ goTracker }}">Open tracker</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ deckActive }}">
+              <div style="position:relative;flex:1;min-height:0">
+                <div style="position:absolute;left:8px;right:8px;top:14px;bottom:14px;border:2px solid var(--color-neutral-300);background:var(--color-surface)"></div>
+                <div style="position:absolute;left:4px;right:4px;top:7px;bottom:7px;border:2px solid var(--color-neutral-400);background:var(--color-bg)"></div>
+                <div style="position:absolute;inset:0;border:2px solid var(--color-text);background:var(--color-bg);padding:20px;box-sizing:border-box;display:flex;flex-direction:column;transition:transform .26s ease,opacity .26s ease;transform:{{ cardTransform }};opacity:{{ cardOpacity }}">
+
+                  <sc-if value="{{ cardIsJob }}">
+                    <div style="display:flex;flex-direction:column;height:100%">
+                      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+                        <div>
+                          <div style="font:700 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-600)">{{ card.company }}</div>
+                          <h3 style="font:800 24px/1.08 Archivo,system-ui,sans-serif;letter-spacing:-.015em;margin:9px 0 0;text-wrap:pretty">{{ card.title }}</h3>
+                        </div>
+                        <span class="tag tag-outline" style="flex:none">{{ card.source }}</span>
+                      </div>
+
+                      <div style="font:400 13px/1.4 Archivo,system-ui,sans-serif;color:var(--color-neutral-700);margin-top:10px">{{ card.meta }}</div>
+
+                      <sc-if value="{{ showFit }}">
+                        <div style="margin-top:18px;padding-top:14px;border-top:2px solid var(--color-divider)">
+                          <div style="display:flex;justify-content:space-between;align-items:baseline">
+                            <span style="font:700 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase">Why it's here</span>
+                            <span style="font:800 15px/1 Archivo,system-ui,sans-serif;color:var(--color-accent)">{{ card.fit }}</span>
+                          </div>
+                          <div style="height:6px;background:var(--color-neutral-300);margin-top:10px">
+                            <div style="height:6px;background:var(--color-accent);width:{{ card.fitPct }}"></div>
+                          </div>
+                        </div>
+                      </sc-if>
+
+                      <div style="margin-top:14px;display:flex;flex-direction:column">
+                        <sc-for list="{{ card.reasons }}" as="r" hint-placeholder-count="3">
+                          <div style="display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--color-neutral-300)">
+                            <span style="width:7px;height:7px;flex:none;margin-top:6px;background:{{ r.dot }}"></span>
+                            <span style="font:400 14px/1.35 Archivo,system-ui,sans-serif;color:var(--color-neutral-800);text-wrap:pretty">{{ r.text }}</span>
+                          </div>
+                        </sc-for>
+                      </div>
+
+                      <div style="margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:16px">
+                        <div style="font:600 13px/1.3 Archivo,system-ui,sans-serif;color:var(--color-accent-700)">{{ card.deadline }}</div>
+                        <button class="btn btn-ghost" style="font-size:13px;padding:8px 10px" onClick="{{ openDetail }}">Full posting</button>
+                      </div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ cardIsPrep }}">
+                    <div style="display:flex;flex-direction:column;height:100%;background:var(--color-accent);margin:-20px;padding:20px;color:#fff">
+                      <div style="font:700 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;opacity:.85">Prep step · not a posting</div>
+                      <h3 style="font:800 30px/1.03 Archivo,system-ui,sans-serif;letter-spacing:-.02em;margin:14px 0 0;text-wrap:pretty">{{ card.title }}</h3>
+                      <p style="font:400 15px/1.45 Archivo,system-ui,sans-serif;margin:14px 0 0;opacity:.92;text-wrap:pretty">{{ card.body }}</p>
+                      <div style="margin-top:20px;padding-top:16px;border-top:2px solid rgba(255,255,255,.4)">
+                        <div style="font:700 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;opacity:.85">Unlocks</div>
+                        <div style="font:600 15px/1.35 Archivo,system-ui,sans-serif;margin-top:8px">{{ card.unlocks }}</div>
+                      </div>
+                      <div style="margin-top:auto;font:600 13px/1.3 Archivo,system-ui,sans-serif;opacity:.9">{{ card.effort }}</div>
+                    </div>
+                  </sc-if>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:10px;margin-top:16px">
+                <button class="btn btn-secondary" style="flex:1;justify-content:flex-start" onClick="{{ passCard }}">Pass</button>
+                <button class="btn btn-primary" style="flex:1;justify-content:flex-start" onClick="{{ saveCard }}">{{ saveLabel }}</button>
+              </div>
+              <div style="font:400 12px/1.3 Archivo,system-ui,sans-serif;color:var(--color-neutral-600);margin-top:10px">Passing teaches the list. You'll see fewer like it tomorrow.</div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isSearch }}">
+          <div style="padding:58px 20px 14px;border-bottom:2px solid var(--color-divider)">
+            <h2 style="font:800 27px/1 Archivo,system-ui,sans-serif;letter-spacing:-.02em;margin:0 0 14px">Search</h2>
+            <input class="input" placeholder="Role, company, or skill" value="{{ query }}" onChange="{{ setQuery }}" style="font-size:15px">
+            <div style="display:flex;gap:8px;margin-top:12px;overflow:auto">
+              <sc-for list="{{ chips }}" as="c" hint-placeholder-count="4">
+                <button style="all:unset;cursor:pointer;flex:none;padding:8px 12px;font:600 12px/1 Archivo,system-ui,sans-serif;border:2px solid {{ c.border }};background:{{ c.bg }};color:{{ c.fg }}" onClick="{{ c.toggle }}">{{ c.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="flex:1;overflow:auto">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:13px 20px;border-bottom:1px solid var(--color-neutral-300)">
+              <span style="font:600 12px/1 Archivo,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-700)">{{ resultCount }} results</span>
+              <button class="btn btn-ghost" style="font-size:12px;padding:6px 8px" onClick="{{ toggleFilters }}">Filters · {{ filterCount }}</button>
+            </div>
+            <sc-for list="{{ results }}" as="j" hint-placeholder-count="5">
+              <button style="all:unset;cursor:pointer;display:block;width:100%;box-sizing:border-box;padding:16px 20px;border-bottom:1px solid var(--color-neutral-300);text-align:left" onClick="{{ j.open }}">
+                <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+                  <div>
+                    <div style="font:700 10px/1 Archivo,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-600)">{{ j.company }}</div>
+                    <div style="font:700 17px/1.2 Archivo,system-ui,sans-serif;margin-top:7px;text-wrap:pretty">{{ j.title }}</div>
+                    <div style="font:400 12px/1.4 Archivo,system-ui,sans-serif;color:var(--color-neutral-700);margin-top:6px">{{ j.meta }}</div>
+                  </div>
+                  <div style="text-align:right;flex:none">
+                    <div style="font:800 16px/1 Archivo,system-ui,sans-serif;color:{{ j.fitColor }}">{{ j.fit }}</div>
+                    <div style="font:600 9px/1 Archivo,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600);margin-top:5px">fit</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+                  <span class="tag tag-outline">{{ j.source }}</span>
+                  <span style="font:600 11px/1 Archivo,system-ui,sans-serif;padding:5px 7px;background:{{ j.flagBg }};color:{{ j.flagFg }}">{{ j.flag }}</span>
+                </div>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isTracker }}">
+          <div style="padding:58px 20px 0;border-bottom:2px solid var(--color-divider)">
+            <h2 style="font:800 27px/1 Archivo,system-ui,sans-serif;letter-spacing:-.02em;margin:0 0 14px">Applications</h2>
+            <div style="display:flex;gap:0;border-bottom:0">
+              <button style="all:unset;cursor:pointer;padding:11px 2px;margin-right:22px;font:700 13px/1 Archivo,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:{{ listTabFg }};border-bottom:3px solid {{ listTabBar }}" onClick="{{ showList }}">List</button>
+              <button style="all:unset;cursor:pointer;padding:11px 2px;font:700 13px/1 Archivo,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:{{ calTabFg }};border-bottom:3px solid {{ calTabBar }}" onClick="{{ showCal }}">Deadlines</button>
+            </div>
+          </div>
+
+          <div style="flex:1;overflow:auto">
+            <sc-if value="{{ trackerIsList }}">
+              <div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);border-bottom:2px solid var(--color-divider)">
+                  <sc-for list="{{ stats }}" as="st" hint-placeholder-count="3">
+                    <div style="padding:15px 16px;border-right:1px solid var(--color-neutral-300)">
+                      <div style="font:800 26px/1 Archivo,system-ui,sans-serif;color:{{ st.color }}">{{ st.n }}</div>
+                      <div style="font:600 10px/1.2 Archivo,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600);margin-top:7px">{{ st.label }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+                <sc-if value="{{ nudge }}">
+                  <div style="padding:16px 20px;border-bottom:2px solid var(--color-divider);background:var(--color-accent-100)">
+                    <div style="font:700 10px/1 Archivo,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent-700)">One quick check</div>
+                    <div style="font:700 17px/1.2 Archivo,system-ui,sans-serif;margin-top:9px">{{ nudge.question }}</div>
+                    <div style="font:400 12px/1.4 Archivo,system-ui,sans-serif;color:var(--color-neutral-700);margin-top:7px">{{ nudge.detail }}</div>
+                    <div style="display:flex;gap:8px;margin-top:13px">
+                      <button class="btn btn-primary" style="font-size:13px" onClick="{{ nudge.heard }}">Heard back</button>
+                      <button class="btn btn-secondary" style="font-size:13px" onClick="{{ nudge.waiting }}">Still waiting</button>
+                    </div>
+                  </div>
+                </sc-if>
+                <sc-for list="{{ apps }}" as="a" hint-placeholder-count="5">
+                  <div style="padding:16px 20px;border-bottom:1px solid var(--color-neutral-300)">
+                    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+                      <div>
+                        <div style="font:700 10px/1 Archivo,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-600)">{{ a.company }}</div>
+                        <div style="font:700 16px/1.2 Archivo,system-ui,sans-serif;margin-top:7px">{{ a.title }}</div>
+                      </div>
+                      <button style="all:unset;cursor:{{ a.editCursor }};flex:none;font:700 10px/1 Archivo,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:6px 8px;background:{{ a.statusBg }};color:{{ a.statusFg }}" onClick="{{ a.editStatus }}">{{ a.status }}</button>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+                      <span style="font:400 12px/1.3 Archivo,system-ui,sans-serif;color:var(--color-neutral-700)">{{ a.note }}</span>
+                      <span style="font:600 12px/1.3 Archivo,system-ui,sans-serif;color:{{ a.dueColor }}">{{ a.due }}</span>
+                    </div>
+                    <div style="font:400 11px/1.3 Archivo,system-ui,sans-serif;color:var(--color-neutral-600);margin-top:8px">Sent with {{ a.resume }} · {{ a.sourceNote }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ trackerIsCal }}">
+              <div style="padding:18px 20px 24px">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px">
+                  <span style="font:800 19px/1 Archivo,system-ui,sans-serif">August 2026</span>
+                  <span style="font:600 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">4 deadlines</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;border-top:2px solid var(--color-divider);padding-top:8px">
+                  <sc-for list="{{ dayNames }}" as="dn" hint-placeholder-count="7">
+                    <div style="font:700 10px/1 Archivo,system-ui,sans-serif;text-align:center;color:var(--color-neutral-600);padding-bottom:8px">{{ dn }}</div>
+                  </sc-for>
+                  <sc-for list="{{ days }}" as="d" hint-placeholder-count="35">
+                    <div style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:{{ d.bg }};color:{{ d.fg }};font:600 13px/1 Archivo,system-ui,sans-serif">
+                      <span>{{ d.label }}</span>
+                      <span style="width:5px;height:5px;background:{{ d.dot }}"></span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="margin-top:22px;border-top:2px solid var(--color-divider)">
+                  <sc-for list="{{ upcoming }}" as="u" hint-placeholder-count="4">
+                    <div style="display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--color-neutral-300);align-items:flex-start">
+                      <div style="flex:none;width:38px;text-align:center">
+                        <div style="font:800 19px/1 Archivo,system-ui,sans-serif;color:{{ u.color }}">{{ u.day }}</div>
+                        <div style="font:600 9px/1 Archivo,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-600);margin-top:4px">{{ u.month }}</div>
+                      </div>
+                      <div>
+                        <div style="font:700 14px/1.25 Archivo,system-ui,sans-serif">{{ u.title }}</div>
+                        <div style="font:400 12px/1.35 Archivo,system-ui,sans-serif;color:var(--color-neutral-700);margin-top:5px">{{ u.note }}</div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isAlumni }}">
+          <div style="padding:58px 20px 14px;border-bottom:2px solid var(--color-divider)">
+            <div style="font:700 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--color-accent-700)">Leeds School of Business</div>
+            <h2 style="font:800 27px/1 Archivo,system-ui,sans-serif;letter-spacing:-.02em;margin:9px 0 0">Mentor Match</h2>
+          </div>
+          <div style="flex:1;overflow:auto">
+            <sc-if value="{{ mentorUnjoined }}">
+              <div style="padding:20px">
+                <div style="background:var(--color-accent);color:#fff;padding:24px 22px">
+                  <h3 style="font:800 26px/1.05 Archivo,system-ui,sans-serif;letter-spacing:-.02em;margin:0;text-wrap:pretty">A Leeds alum, matched to you for one semester.</h3>
+                  <p style="font:400 15px/1.45 Archivo,system-ui,sans-serif;margin:14px 0 0;opacity:.92">Four scheduled conversations, one resume review, and a warm introduction if the fit is there. Matching runs twice a year.</p>
+                </div>
+                <div style="border-bottom:2px solid var(--color-divider);padding:18px 0 4px">
+                  <div style="font:700 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-600);margin-bottom:14px">How matching works</div>
+                  <sc-for list="{{ matchSteps }}" as="ms" hint-placeholder-count="3">
+                    <div style="display:flex;gap:14px;padding:12px 0;border-top:1px solid var(--color-neutral-300);align-items:flex-start">
+                      <span style="font:800 14px/1 Archivo,system-ui,sans-serif;color:var(--color-accent);flex:none;width:18px">{{ ms.n }}</span>
+                      <span style="font:400 14px/1.4 Archivo,system-ui,sans-serif;color:var(--color-neutral-800);text-wrap:pretty">{{ ms.text }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="padding:20px 0 0">
+                  <button class="btn btn-primary btn-block" onClick="{{ joinMentor }}">Request a match</button>
+                  <div style="font:400 12px/1.4 Archivo,system-ui,sans-serif;color:var(--color-neutral-600);margin-top:10px">Fall cohort closes September 12. 214 alumni mentors signed up.</div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ mentorJoined }}">
+              <div>
+                <div style="padding:16px 20px;background:var(--color-accent-100);border-bottom:2px solid var(--color-divider)">
+                  <div style="font:700 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent-700)">Request received</div>
+                  <div style="font:400 14px/1.45 Archivo,system-ui,sans-serif;color:var(--color-neutral-800);margin-top:8px">You're in the fall cohort. Below are the three alumni closest to what you said you want.</div>
+                </div>
+                <sc-for list="{{ mentors }}" as="m" hint-placeholder-count="3">
+                  <div style="padding:18px 20px;border-bottom:1px solid var(--color-neutral-300)">
+                    <div style="display:flex;gap:14px;align-items:flex-start">
+                      <div style="width:46px;height:46px;flex:none;background:var(--color-neutral-300);display:flex;align-items:center;justify-content:center;font:800 15px/1 Archivo,system-ui,sans-serif;color:var(--color-neutral-700)">{{ m.initials }}</div>
+                      <div style="flex:1">
+                        <div style="font:700 16px/1.2 Archivo,system-ui,sans-serif">{{ m.name }}</div>
+                        <div style="font:400 13px/1.4 Archivo,system-ui,sans-serif;color:var(--color-neutral-700);margin-top:5px">{{ m.role }}</div>
+                        <div style="font:600 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600);margin-top:8px">Leeds {{ m.year }} · {{ m.major }}</div>
+                      </div>
+                    </div>
+                    <div style="font:400 13px/1.45 Archivo,system-ui,sans-serif;color:var(--color-neutral-800);margin-top:12px;text-wrap:pretty">{{ m.why }}</div>
+                    <div style="margin-top:14px">
+                      <button class="btn btn-secondary" style="font-size:13px" onClick="{{ m.request }}">{{ m.cta }}</button>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isProfile }}">
+          <div style="padding:58px 20px 14px;border-bottom:2px solid var(--color-divider)">
+            <h2 style="font:800 27px/1 Archivo,system-ui,sans-serif;letter-spacing:-.02em;margin:0">Jordan Whitfield</h2>
+            <div style="font:400 14px/1.4 Archivo,system-ui,sans-serif;color:var(--color-neutral-700);margin-top:8px">{{ yearLabel }} · Leeds School of Business · Marketing</div>
+          </div>
+          <div style="flex:1;overflow:auto">
+            <div style="padding:18px 20px;border-bottom:2px solid var(--color-divider)">
+              <div style="font:700 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-600);margin-bottom:12px">Resume versions</div>
+              <sc-for list="{{ resumes }}" as="r" hint-placeholder-count="3">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-top:1px solid var(--color-neutral-300)">
+                  <div>
+                    <div style="font:700 15px/1.2 Archivo,system-ui,sans-serif">{{ r.name }}</div>
+                    <div style="font:400 12px/1.3 Archivo,system-ui,sans-serif;color:var(--color-neutral-600);margin-top:5px">{{ r.note }}</div>
+                  </div>
+                  <span style="font:600 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-600)">{{ r.used }}</span>
+                </div>
+              </sc-for>
+              <button class="btn btn-ghost" style="font-size:13px;padding:8px 0;margin-top:8px">Add a version</button>
+            </div>
+            <sc-for list="{{ profileRows }}" as="p" hint-placeholder-count="5">
+              <button style="all:unset;cursor:pointer;display:flex;width:100%;box-sizing:border-box;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--color-neutral-300)" onClick="{{ p.go }}">
+                <span style="font:600 15px/1.2 Archivo,system-ui,sans-serif">{{ p.label }}</span>
+                <span style="font:600 12px/1 Archivo,system-ui,sans-serif;color:var(--color-neutral-600)">{{ p.value }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ detailOpen }}">
+          <div style="position:absolute;inset:0;background:var(--color-bg);z-index:70;display:flex;flex-direction:column">
+            <div style="padding:58px 20px 14px;border-bottom:2px solid var(--color-divider);display:flex;align-items:center;gap:14px">
+              <button style="all:unset;cursor:pointer;font:700 13px/1 Archivo,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent)" onClick="{{ closeDetail }}">Close</button>
+              <span style="font:600 12px/1 Archivo,system-ui,sans-serif;color:var(--color-neutral-600)">{{ detail.source }}</span>
+            </div>
+            <div style="flex:1;overflow:auto;padding:20px">
+              <div style="font:700 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-600)">{{ detail.company }}</div>
+              <h3 style="font:800 28px/1.05 Archivo,system-ui,sans-serif;letter-spacing:-.02em;margin:10px 0 0;text-wrap:pretty">{{ detail.title }}</h3>
+              <div style="font:400 14px/1.4 Archivo,system-ui,sans-serif;color:var(--color-neutral-700);margin-top:10px">{{ detail.meta }}</div>
+              <div class="hr" style="margin:18px 0"></div>
+              <div style="font:700 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;margin-bottom:12px">Your standing</div>
+              <sc-for list="{{ detail.reasons }}" as="r" hint-placeholder-count="3">
+                <div style="display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--color-neutral-300);align-items:flex-start">
+                  <span style="width:7px;height:7px;flex:none;margin-top:6px;background:{{ r.dot }}"></span>
+                  <span style="font:400 14px/1.35 Archivo,system-ui,sans-serif;color:var(--color-neutral-800)">{{ r.text }}</span>
+                </div>
+              </sc-for>
+              <div style="font:700 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;margin:22px 0 10px">What you'd do</div>
+              <p style="font:400 14px/1.55 Archivo,system-ui,sans-serif;color:var(--color-neutral-800);margin:0;text-wrap:pretty">{{ detail.body }}</p>
+            </div>
+            <div style="padding:16px 20px 34px;border-top:2px solid var(--color-divider);display:flex;gap:10px">
+              <button class="btn btn-secondary" style="flex:none">Save</button>
+              <button class="btn btn-primary" style="flex:1;justify-content:flex-start" onClick="{{ openApply }}">Apply with a resume</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ applyOpen }}">
+          <div style="position:absolute;inset:0;background:rgba(32,30,29,.55);z-index:80;display:flex;align-items:flex-end">
+            <div style="width:100%;background:var(--color-bg);border-top:2px solid var(--color-text);padding:22px 20px 34px;box-sizing:border-box">
+              <sc-if value="{{ applyPicking }}">
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:baseline">
+                    <h3 style="font:800 22px/1.1 Archivo,system-ui,sans-serif;margin:0">Which resume?</h3>
+                    <button style="all:unset;cursor:pointer;font:700 12px/1 Archivo,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent)" onClick="{{ closeApply }}">Cancel</button>
+                  </div>
+                  <p style="font:400 14px/1.45 Archivo,system-ui,sans-serif;color:var(--color-neutral-700);margin:10px 0 16px">{{ applyHint }}</p>
+                  <div style="border-top:2px solid var(--color-divider)">
+                    <sc-for list="{{ resumeChoices }}" as="rc" hint-placeholder-count="3">
+                      <button style="all:unset;cursor:pointer;display:flex;width:100%;box-sizing:border-box;gap:13px;align-items:flex-start;padding:14px 2px;border-bottom:1px solid var(--color-neutral-300)" onClick="{{ rc.pick }}">
+                        <span style="width:18px;height:18px;flex:none;margin-top:2px;border:2px solid {{ rc.border }};background:{{ rc.bg }}"></span>
+                        <span style="text-align:left">
+                          <span style="display:block;font:700 15px/1.2 Archivo,system-ui,sans-serif">{{ rc.name }}</span>
+                          <span style="display:block;font:400 12px/1.35 Archivo,system-ui,sans-serif;color:var(--color-neutral-600);margin-top:5px">{{ rc.note }}</span>
+                        </span>
+                      </button>
+                    </sc-for>
+                  </div>
+                  <button class="btn btn-primary btn-block" style="margin-top:18px" onClick="{{ submitApply }}">Submit application</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ applyDone }}">
+                <div>
+                  <div style="font:700 11px/1 Archivo,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--color-accent-700)">Submitted</div>
+                  <h3 style="font:800 24px/1.1 Archivo,system-ui,sans-serif;margin:12px 0 0;text-wrap:pretty">{{ detail.title }} is in your tracker.</h3>
+                  <p style="font:400 14px/1.45 Archivo,system-ui,sans-serif;color:var(--color-neutral-700);margin:12px 0 18px">Sent with {{ chosenResume }}. {{ applySyncNote }}</p>
+                  <div style="display:flex;gap:10px">
+                    <button class="btn btn-secondary" style="flex:1;justify-content:flex-start" onClick="{{ closeApply }}">Keep browsing</button>
+                    <button class="btn btn-primary" style="flex:1;justify-content:flex-start" onClick="{{ goTrackerFromApply }}">Open tracker</button>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ editingOpen }}">
+          <div style="position:absolute;inset:0;background:rgba(32,30,29,.55);z-index:85;display:flex;align-items:flex-end">
+            <div style="width:100%;background:var(--color-bg);border-top:2px solid var(--color-text);padding:22px 20px 34px;box-sizing:border-box">
+              <div style="display:flex;justify-content:space-between;align-items:baseline">
+                <h3 style="font:800 21px/1.1 Archivo,system-ui,sans-serif;margin:0">{{ editingTitle }}</h3>
+                <button style="all:unset;cursor:pointer;font:700 12px/1 Archivo,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent)" onClick="{{ closeEditing }}">Cancel</button>
+              </div>
+              <p style="font:400 13px/1.45 Archivo,system-ui,sans-serif;color:var(--color-neutral-700);margin:9px 0 16px">Where does this stand? Only you can see this, and it drives your follow-up reminders.</p>
+              <div style="display:flex;flex-direction:column;gap:0;border-top:2px solid var(--color-divider)">
+                <sc-for list="{{ statusOptions }}" as="so" hint-placeholder-count="4">
+                  <button style="all:unset;cursor:pointer;padding:14px;border-bottom:1px solid var(--color-neutral-300);font:700 15px/1 Archivo,system-ui,sans-serif;background:{{ so.bg }};color:{{ so.fg }}" onClick="{{ so.pick }}">{{ so.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showTabs }}">
+          <div style="border-top:2px solid var(--color-divider);background:var(--color-bg);padding:10px 8px 30px;display:grid;grid-template-columns:repeat(5,1fr)">
+            <button style="all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 0;color:{{ tabTodayFg }}" onClick="{{ goToday }}">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 3 3 8l9 5 9-5-9-5Z"></path><path d="M3 14l9 5 9-5"></path></svg>
+              <span style="font:700 9px/1 Archivo,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase">Today</span>
+            </button>
+            <button style="all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 0;color:{{ tabSearchFg }}" onClick="{{ goSearch }}">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4.5-4.5"></path></svg>
+              <span style="font:700 9px/1 Archivo,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase">Search</span>
+            </button>
+            <button style="all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 0;color:{{ tabTrackerFg }}" onClick="{{ goTracker }}">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 5h16"></path><path d="M4 12h16"></path><path d="M4 19h9"></path></svg>
+              <span style="font:700 9px/1 Archivo,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase">Tracker</span>
+            </button>
+            <button style="all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 0;color:{{ tabAlumniFg }}" onClick="{{ goAlumni }}">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"></path><path d="M16 5.5a3.5 3.5 0 0 1 0 6"></path><path d="M18 14c2.2.7 3.5 2.6 3.5 5"></path></svg>
+              <span style="font:700 9px/1 Archivo,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase">Alumni</span>
+            </button>
+            <button style="all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 0;color:{{ tabProfileFg }}" onClick="{{ goProfile }}">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 21c0-4.1 3.4-7 7.5-7s7.5 2.9 7.5 7"></path></svg>
+              <span style="font:700 9px/1 Archivo,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase">You</span>
+            </button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ toast }}">
+          <div style="position:absolute;left:20px;right:20px;bottom:118px;z-index:90;background:var(--color-text);color:#fff;padding:13px 15px;font:600 13px/1.3 Archivo,system-ui,sans-serif">{{ toast }}</div>
+        </sc-if>
+      </div>
+    </x-import>
+    <div style="font:400 12px/1.4 Archivo,system-ui,sans-serif;color:var(--color-neutral-600);text-align:center;max-width:402px">Tappable: onboarding, the daily deck, search filters, tracker and deadline views, mentor matching, and the apply sheet.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;classYear&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;First-year&quot;,&quot;Junior&quot;],&quot;default&quot;:&quot;Junior&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Audience&quot;},&quot;showFitScores&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Audience&quot;}}">
+const ACCENT = 'var(--color-accent)';
+const INK = 'var(--color-text)';
+const MUTED = 'var(--color-neutral-600)';
+
+const JOBS = [
+  { id: 'ball', company: 'Ball Aerospace', title: 'Systems Engineering Intern', meta: 'Broomfield, CO · Summer 2027 · Paid, $28/hr',
+    source: 'Handshake', fit: '92', flag: 'Strong match', deadline: 'Closes in 6 days · Sept 4',
+    reasons: [
+      { k: 'skill', text: 'Matches 5 of 7 listed skills, including Excel modeling and technical writing.' },
+      { k: 'alum', text: '3 Leeds alumni work here. One is in the mentor pool.' },
+      { k: 'hist', text: '6 CU Boulder students were hired into this program last year.' }],
+    body: 'Sit with a systems team through one hardware milestone: requirements tracing, test documentation, and the weekly integration review. Interns present findings at the end of the term.' },
+  { id: 'arrow', company: 'Arrow Electronics', title: 'Financial Analyst Intern', meta: 'Centennial, CO · Summer 2027 · Paid, $25/hr',
+    source: 'Handshake', fit: '88', flag: 'Strong match', deadline: 'Closes in 12 days · Sept 10',
+    reasons: [
+      { k: 'skill', text: 'Matches 4 of 6 listed skills. Your finance coursework covers the rest.' },
+      { k: 'alum', text: '12 Leeds alumni work here — the largest cluster in your saved list.' },
+      { k: 'hist', text: '9 CU students hired since 2023, 4 returned full-time.' }],
+    body: 'Support the FP&A team through a quarterly close. Variance analysis, model upkeep, and one independent project presented to the finance director.' },
+  { id: 'trimble', company: 'Trimble', title: 'Product Marketing Intern', meta: 'Westminster, CO · Summer 2027 · Hybrid',
+    source: 'Public board', fit: '81', flag: 'Worth a look', deadline: 'Closes in 20 days · Sept 18',
+    reasons: [
+      { k: 'skill', text: 'Matches 4 of 7 listed skills. Asks for one you have not listed: SQL basics.' },
+      { k: 'alum', text: '2 Leeds alumni work here.' },
+      { k: 'hist', text: 'No CU hiring history on this posting.' }],
+    body: 'Work on launch material for one product line: competitive research, customer interview notes, and a first draft of the sales one-pager.' },
+  { id: 'vail', company: 'Vail Resorts', title: 'Marketing Analytics Intern', meta: 'Broomfield, CO · Summer 2027 · Paid',
+    source: 'Handshake', fit: '74', flag: 'Stretch role', deadline: 'Closes in 3 days · Aug 27',
+    reasons: [
+      { k: 'skill', text: 'Matches 3 of 8 listed skills. The gap is Tableau and A/B testing.' },
+      { k: 'alum', text: '7 Leeds alumni work here.' },
+      { k: 'hist', text: '4 CU students hired last year, all juniors.' }],
+    body: 'Own reporting for one campaign channel. Weekly performance readouts, a segmentation pass, and support on the pass-holder retention analysis.' },
+  { id: 'schwab', company: 'Charles Schwab', title: 'Wealth Management Summer Analyst', meta: 'Lone Tree, CO · Summer 2027 · Paid, $30/hr',
+    source: 'Handshake', fit: '69', flag: 'Stretch role', deadline: 'Closes in 25 days · Sept 23',
+    reasons: [
+      { k: 'skill', text: 'Matches 3 of 9 listed skills. Wants a client-facing example you do not have yet.' },
+      { k: 'alum', text: '18 Leeds alumni work here.' },
+      { k: 'hist', text: '11 CU students hired since 2022.' }],
+    body: 'Shadow a branch team, prepare client review material, and complete the licensing prep track offered to summer analysts.' },
+  { id: 'boom', company: 'Boom Supersonic', title: 'Supply Chain Intern', meta: 'Denver, CO · Summer 2027 · On-site',
+    source: 'Public board', fit: '63', flag: 'Stretch role', deadline: 'Rolling',
+    reasons: [
+      { k: 'skill', text: 'Matches 2 of 8 listed skills.' },
+      { k: 'alum', text: '1 Leeds alum works here.' },
+      { k: 'hist', text: 'No CU hiring history on this posting.' }],
+    body: 'Track parts through a build cycle, keep supplier records current, and help run the weekly shortage meeting.' }];
+
+const PREP = [
+  { id: 'p1', kind: 'prep', title: 'Turn two class projects into three resume lines.',
+    body: 'You listed BCOR 2500 and a marketing analytics project but neither is on your resume. Postings match against what is written down.',
+    unlocks: 'Raises your match on 14 open postings, including Arrow and Trimble.', effort: '25 minutes · guided template' },
+  { id: 'p2', kind: 'prep', title: 'Ask one Leeds alum how they got in.',
+    body: 'Three alumni at companies you saved are in the mentor pool this term. A fifteen-minute conversation is the whole ask.',
+    unlocks: 'A named contact on two of your saved applications.', effort: '15 minutes · we draft the message' },
+  { id: 'p3', kind: 'prep', title: 'Learn enough SQL to clear the filter.',
+    body: 'SQL is the single most common requirement blocking your stretch roles. The career center runs a two-session workshop in September.',
+    unlocks: 'Moves 9 stretch roles into your match range.', effort: '2 sessions · Sept 9 and 16' }];
+
+const DOT = { skill: 'var(--color-accent)', alum: 'var(--color-neutral-800)', hist: 'var(--color-neutral-500)' };
+
+const STATUS_STYLE = {
+  Applied: ['var(--color-neutral-200)', 'var(--color-neutral-800)'],
+  Interview: ['var(--color-accent)', '#fff'],
+  Offer: ['var(--color-text)', '#fff'],
+  Draft: ['var(--color-neutral-300)', 'var(--color-neutral-900)'],
+  Closed: ['transparent', 'var(--color-neutral-600)'],
+};
+
+const SEED_APPS = [
+  { id: 'a1', company: 'Arrow Electronics', title: 'Financial Analyst Intern', status: 'Interview', synced: true,
+    note: 'Second round, virtual', due: 'Sept 2, 10:00', resume: 'Business Analytics v3', urgent: true },
+  { id: 'a2', company: 'Vail Resorts', title: 'Marketing Analytics Intern', status: 'Applied', synced: false,
+    note: 'No response yet · 11 days', due: 'Follow up Aug 27', resume: 'Marketing v2', urgent: true, ask: true },
+  { id: 'a3', company: 'Ball Aerospace', title: 'Systems Engineering Intern', status: 'Draft', synced: true,
+    note: 'Resume picked, essay unfinished', due: 'Closes Sept 4', resume: 'General v1' },
+  { id: 'a4', company: 'Charles Schwab', title: 'Wealth Management Analyst', status: 'Applied', synced: true,
+    note: 'Referred by a Leeds alum', due: 'Sent Aug 14', resume: 'Business Analytics v3' },
+  { id: 'a5', company: 'Boom Supersonic', title: 'Supply Chain Intern', status: 'Closed', synced: false,
+    note: 'Position filled', due: 'Aug 8', resume: 'General v1' },
+];
+
+class Component extends DCLogic {
+  state = {
+    screen: 'today', ob: 1, year: 'Junior',
+    skills: ['Excel modeling', 'Technical writing', 'Survey design'],
+    sources: ['Handshake', 'Public boards'],
+    idx: 0, fly: null, saved: 0, passed: 0,
+    query: '', chips: ['Summer 2027', 'Paid'], showFilters: false,
+    tracker: 'list', mentor: false, requested: [],
+    detail: null, apply: null, resume: 'Business Analytics v3', toast: null,
+    apps: SEED_APPS, editing: null,
+  };
+
+  setStatus(id, status) {
+    this.setState(st => ({
+      editing: null,
+      apps: st.apps.map(a => a.id === id ? Object.assign({}, a, {
+        status, ask: false,
+        note: status === 'Interview' ? 'You marked this an interview · add the date'
+          : status === 'Offer' ? 'You marked this an offer'
+          : status === 'Closed' ? 'You marked this closed'
+          : 'Still open · you confirmed Aug 24',
+      }) : a),
+    }));
+    this.flash('Status updated to ' + status + '.');
+  }
+
+  deck() {
+    const y = this.props.classYear ?? this.state.year;
+    return y === 'First-year'
+      ? [PREP[0], JOBS[0], PREP[1], JOBS[1], PREP[2], JOBS[2]]
+      : [JOBS[0], PREP[0], JOBS[1], JOBS[3], PREP[1], JOBS[2]];
+  }
+
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: null }), 2200);
+  }
+
+  decide(dir) {
+    if (this.state.fly) return;
+    this.setState({ fly: dir });
+    setTimeout(() => this.setState(s => ({
+      idx: s.idx + 1, fly: null,
+      saved: dir === 'right' ? s.saved + 1 : s.saved,
+      passed: dir === 'left' ? s.passed + 1 : s.passed,
+    })), 270);
+    const card = this.deck()[this.state.idx];
+    if (dir === 'right') this.flash(card && card.kind === 'prep' ? 'Added to your plan.' : 'Saved to your tracker.');
+  }
+
+  go(screen) { this.setState({ screen, detail: null, apply: null }); }
+
+  renderVals() {
+    const s = this.state;
+    const showFit = this.props.showFitScores ?? true;
+    const year = this.props.classYear ?? s.year;
+    const deck = this.deck();
+    const card = deck[s.idx];
+    const detail = s.detail || JOBS[0];
+    const mkReasons = j => j.reasons.map(r => ({ text: r.text, dot: DOT[r.k] }));
+    const askApp = s.apps.find(a => a.ask);
+    const editApp = s.apps.find(a => a.id === s.editing);
+    const liveCount = s.apps.filter(a => a.status === 'Applied' || a.status === 'Interview').length;
+    const interviewCount = s.apps.filter(a => a.status === 'Interview').length;
+
+    const allChips = ['Summer 2027', 'Paid', 'Colorado', 'No experience required', 'Remote ok'];
+    const q = s.query.trim().toLowerCase();
+    const results = JOBS.filter(j => !q || (j.title + ' ' + j.company).toLowerCase().includes(q)).map(j => ({
+      company: j.company, title: j.title, meta: j.meta, fit: j.fit, source: j.source, flag: j.flag,
+      fitColor: +j.fit >= 80 ? ACCENT : 'var(--color-neutral-700)',
+      flagBg: j.flag === 'Stretch role' ? 'var(--color-neutral-200)' : 'var(--color-accent-200)',
+      flagFg: j.flag === 'Stretch role' ? 'var(--color-neutral-800)' : 'var(--color-accent-800)',
+      open: () => this.setState({ detail: j }),
+    }));
+
+    const resumeList = [
+      { name: 'Business Analytics v3', note: 'Leads with coursework and the retention project' },
+      { name: 'Marketing v2', note: 'Leads with the campaign class project' },
+      { name: 'General v1', note: 'First version, from the career center workshop' }];
+
+    const deadlineDays = { 27: 2, 31: 1, 12: 0, 19: 0 };
+    const days = [];
+    for (let i = 0; i < 6; i++) days.push({ label: '', bg: 'transparent', fg: 'transparent', dot: 'transparent' });
+    for (let d = 1; d <= 31; d++) {
+      const hot = d === 27 || d === 31 || d === 10 || d === 18;
+      const today = d === 24;
+      days.push({
+        label: String(d),
+        bg: today ? INK : (hot ? 'var(--color-accent-200)' : 'transparent'),
+        fg: today ? '#fff' : INK,
+        dot: hot && !today ? ACCENT : (today ? 'var(--color-accent-400)' : 'transparent'),
+      });
+    }
+
+    return {
+      isOnboarding: s.screen === 'ob', isToday: s.screen === 'today', isSearch: s.screen === 'search',
+      isTracker: s.screen === 'tracker', isAlumni: s.screen === 'alumni', isProfile: s.screen === 'profile',
+      showTabs: s.screen !== 'ob',
+      goOnboarding: () => this.setState({ screen: 'ob', ob: 1 }), goToday: () => this.go('today'),
+      goSearch: () => this.go('search'), goTracker: () => this.go('tracker'),
+      goAlumni: () => this.go('alumni'), goProfile: () => this.go('profile'),
+      goCalendar: () => this.setState({ screen: 'tracker', tracker: 'cal', detail: null, apply: null }),
+
+      isOb1: s.ob === 1, isOb2: s.ob === 2, isOb3: s.ob === 3,
+      ob1Bar: INK, ob2Bar: s.ob >= 2 ? INK : 'var(--color-neutral-300)', ob3Bar: s.ob >= 3 ? INK : 'var(--color-neutral-300)',
+      years: ['First-year', 'Sophomore', 'Junior', 'Senior'].map(l => ({
+        label: l, mark: s.year === l ? 'Selected' : '', color: s.year === l ? ACCENT : INK,
+        pick: () => this.setState({ year: l, ob: 2 }),
+      })),
+      skills: ['Excel modeling', 'Technical writing', 'Survey design', 'SQL basics', 'Figma', 'Public speaking', 'Python', 'Bookkeeping', 'Social media', 'Event logistics'].map(l => {
+        const on = s.skills.includes(l);
+        return { label: l, border: on ? INK : 'var(--color-neutral-300)', bg: on ? INK : 'transparent', fg: on ? '#fff' : INK,
+          toggle: () => this.setState(st => ({ skills: on ? st.skills.filter(x => x !== l) : st.skills.concat(l) })) };
+      }),
+      skillCount: s.skills.length,
+      obNext: () => this.setState({ ob: 3 }),
+      sources: [
+        { label: 'CU Boulder Handshake', note: 'Postings reserved for CU students, plus career-center events' },
+        { label: 'Public boards', note: 'Aggregated listings, de-duplicated against Handshake' },
+        { label: 'Leeds alumni network', note: 'Mentor matching and alumni-referred openings' }].map(o => {
+          const on = s.sources.includes(o.label) || o.label === 'Leeds alumni network';
+          return { label: o.label, note: o.note, border: on ? INK : 'var(--color-neutral-400)', bg: on ? ACCENT : 'transparent',
+            toggle: () => this.setState(st => ({ sources: st.sources.includes(o.label) ? st.sources.filter(x => x !== o.label) : st.sources.concat(o.label) })) };
+        }),
+      finishOnboarding: () => this.setState({ screen: 'today', idx: 0, saved: 0, passed: 0 }),
+
+      deckLeft: Math.max(0, deck.length - s.idx),
+      deckDone: s.idx >= deck.length, deckActive: s.idx < deck.length,
+      deckSummary: s.saved + ' saved, ' + s.passed + ' passed.',
+      cardIsJob: !!card && card.kind !== 'prep', cardIsPrep: !!card && card.kind === 'prep',
+      cardTransform: s.fly === 'left' ? 'translateX(-120%) rotate(-7deg)' : s.fly === 'right' ? 'translateX(120%) rotate(7deg)' : 'none',
+      cardOpacity: s.fly ? '0' : '1',
+      showFit,
+      card: card ? {
+        company: card.company, title: card.title, meta: card.meta, source: card.source, fit: card.fit,
+        fitPct: card.fit ? card.fit + '%' : '0%', deadline: card.deadline,
+        reasons: card.reasons ? mkReasons(card) : [],
+        body: card.body, unlocks: card.unlocks, effort: card.effort,
+      } : {},
+      saveLabel: card && card.kind === 'prep' ? 'Add to plan' : 'Save',
+      passCard: () => this.decide('left'), saveCard: () => this.decide('right'),
+      openDetail: () => this.setState({ detail: card }),
+
+      query: s.query, setQuery: e => this.setState({ query: e.target.value }),
+      chips: allChips.map(l => {
+        const on = s.chips.includes(l);
+        return { label: l, border: on ? ACCENT : 'var(--color-neutral-300)', bg: on ? ACCENT : 'transparent', fg: on ? '#fff' : INK,
+          toggle: () => this.setState(st => ({ chips: on ? st.chips.filter(x => x !== l) : st.chips.concat(l) })) };
+      }),
+      results, resultCount: results.length, filterCount: s.chips.length,
+      toggleFilters: () => this.flash(s.chips.length + ' filters on. Tap a chip to change them.'),
+
+      trackerIsList: s.tracker === 'list', trackerIsCal: s.tracker === 'cal',
+      showList: () => this.setState({ tracker: 'list' }), showCal: () => this.setState({ tracker: 'cal' }),
+      listTabFg: s.tracker === 'list' ? INK : MUTED, listTabBar: s.tracker === 'list' ? ACCENT : 'transparent',
+      calTabFg: s.tracker === 'cal' ? INK : MUTED, calTabBar: s.tracker === 'cal' ? ACCENT : 'transparent',
+      stats: [
+        { n: String(liveCount), label: 'In flight', color: INK },
+        { n: String(interviewCount), label: 'Interviewing', color: interviewCount ? ACCENT : INK },
+        { n: '4', label: 'Due this week', color: INK }],
+      apps: s.apps.map(a => ({
+        company: a.company, title: a.title, status: a.status, note: a.note, due: a.due, resume: a.resume,
+        statusBg: STATUS_STYLE[a.status][0], statusFg: STATUS_STYLE[a.status][1],
+        dueColor: a.urgent ? 'var(--color-accent-700)' : (a.status === 'Closed' ? MUTED : INK),
+        sourceNote: a.synced ? 'Status synced from Handshake' : 'Self-reported · tap the status to change it',
+        editStatus: () => this.setState({ editing: a.synced ? null : a.id }),
+        editCursor: a.synced ? 'default' : 'pointer',
+      })),
+      nudge: askApp ? {
+        company: askApp.company,
+        question: 'Any word from ' + askApp.company + '?',
+        detail: 'Applied 11 days ago through a public board, so we cannot check for you.',
+        heard: () => this.setState({ editing: askApp.id }),
+        waiting: () => this.setStatus(askApp.id, 'Applied'),
+      } : null,
+      editingOpen: !!s.editing,
+      statusOptions: ['Applied', 'Interview', 'Offer', 'Closed'].map(st => ({
+        label: st,
+        bg: editApp && editApp.status === st ? INK : 'transparent',
+        fg: editApp && editApp.status === st ? '#fff' : INK,
+        pick: () => this.setStatus(s.editing, st),
+      })),
+      editingTitle: editApp ? editApp.company : '',
+      closeEditing: () => this.setState({ editing: null }),
+      dayNames: ['S', 'M', 'T', 'W', 'T', 'F', 'S'], days,
+      upcoming: [
+        { day: '27', month: 'Aug', title: 'Vail Resorts — application closes', note: 'Stretch role. Follow up on your open application first.', color: ACCENT },
+        { day: '31', month: 'Aug', title: 'Career center resume review', note: 'Bring Business Analytics v3.', color: ACCENT },
+        { day: '02', month: 'Sep', title: 'Arrow Electronics — second round', note: '30 minutes, virtual. Prep notes ready.', color: INK },
+        { day: '04', month: 'Sep', title: 'Ball Aerospace — application closes', note: 'Draft unfinished. One essay left.', color: INK }],
+
+      mentorUnjoined: !s.mentor, mentorJoined: s.mentor,
+      joinMentor: () => { this.setState({ mentor: true }); this.flash('Match request sent to Leeds.'); },
+      matchSteps: [
+        { n: '1', text: 'You say what you want out of it: a field, a company, or just a first conversation.' },
+        { n: '2', text: 'Leeds pairs you with an alum by industry and, where possible, by major.' },
+        { n: '3', text: 'Four conversations across the semester. Referrals happen when the alum offers them.' }],
+      mentors: [
+        { initials: 'DM', name: 'Dana Merrill', role: 'Senior Finance Manager, Arrow Electronics', year: '2016', major: 'Finance', initialsBg: '',
+          why: 'Works in the group you applied to. Has mentored three Leeds students, two of whom she referred.',
+          cta: s.requested.includes('DM') ? 'Request sent' : 'Request Dana', request: () => { this.setState(st => ({ requested: st.requested.concat('DM') })); this.flash('Request sent to Dana Merrill.'); } },
+        { initials: 'PO', name: 'Priya Oduya', role: 'Director of Brand, Vail Resorts', year: '2013', major: 'Marketing',
+          why: 'Matches the marketing analytics track you saved twice this month. Runs the Denver Leeds meetup.',
+          cta: s.requested.includes('PO') ? 'Request sent' : 'Request Priya', request: () => { this.setState(st => ({ requested: st.requested.concat('PO') })); this.flash('Request sent to Priya Oduya.'); } },
+        { initials: 'RC', name: 'Ray Castellanos', role: 'Program Manager, Ball Aerospace', year: '2019', major: 'Business Analytics',
+          why: 'Closest to your class year. Went through the same internship program as a junior.',
+          cta: s.requested.includes('RC') ? 'Request sent' : 'Request Ray', request: () => { this.setState(st => ({ requested: st.requested.concat('RC') })); this.flash('Request sent to Ray Castellanos.'); } }],
+
+      yearLabel: year === 'First-year' ? 'First-year' : year,
+      resumes: resumeList.map((r, i) => ({ name: r.name, note: r.note, used: ['Used 6×', 'Used 3×', 'Used 1×'][i] })),
+      profileRows: [
+        { label: 'Skills and coursework', value: s.skills.length + ' listed', go: () => this.setState({ screen: 'ob', ob: 2 }) },
+        { label: 'Class year', value: year, go: () => this.setState({ screen: 'ob', ob: 1 }) },
+        { label: 'Sources', value: 'Handshake + boards', go: () => this.setState({ screen: 'ob', ob: 3 }) },
+        { label: 'Interview prep', value: '2 sets ready', go: () => this.flash('Interview prep is not built out yet.') },
+        { label: 'Notifications', value: 'Daily at 8:00', go: () => this.flash('One push a day, when the deck is ready.') },
+        { label: 'Saved postings', value: String(4 + s.saved), go: () => this.go('search') }],
+
+      detailOpen: !!s.detail, closeDetail: () => this.setState({ detail: null }),
+      detail: { company: detail.company, title: detail.title, meta: detail.meta, source: detail.source, body: detail.body, reasons: mkReasons(detail) },
+      openApply: () => this.setState({ apply: 'pick' }),
+      applyOpen: !!s.apply, applyPicking: s.apply === 'pick', applyDone: s.apply === 'done',
+      applyHint: 'For ' + detail.company + ', the version that leads with coursework tends to clear the first screen.',
+      resumeChoices: resumeList.map(r => ({ name: r.name, note: r.note,
+        border: s.resume === r.name ? INK : 'var(--color-neutral-400)', bg: s.resume === r.name ? ACCENT : 'transparent',
+        pick: () => this.setState({ resume: r.name }) })),
+      chosenResume: s.resume,
+      submitApply: () => this.setState(st => ({
+        apply: 'done',
+        apps: [{
+          id: 'new' + st.apps.length, company: detail.company, title: detail.title, status: 'Applied',
+          synced: detail.source === 'Handshake', note: 'Submitted just now', due: 'Follow up Sept 3',
+          resume: st.resume, urgent: false,
+        }].concat(st.apps),
+      })),
+      applySyncNote: detail.source === 'Handshake'
+        ? 'This one came through CU Boulder Handshake, so status updates arrive on their own.'
+        : 'This came from a public board. We cannot see their side, so we will check in with you in ten days.',
+      closeApply: () => this.setState({ apply: null }),
+      goTrackerFromApply: () => this.setState({ apply: null, detail: null, screen: 'tracker', tracker: 'list' }),
+      toast: s.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>

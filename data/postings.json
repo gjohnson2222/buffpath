@@ -1,0 +1,488 @@
+{
+  "_meta": {
+    "purpose": "Mock dataset extracted from 'BuffPath Internships v2.dc.html'. Treat as the data contract for any implementation. Mirror changes in both places or neither.",
+    "notes": [
+      "requirement.state is DERIVED per student, not a property of the posting. It is stored here because the prototype has one hardcoded student.",
+      "requirement.yours holds the matching resume line where one exists; empty for missing requirements.",
+      "tier is computed from applicants against seats (see decision D2), not authored.",
+      "'reword' means the student has the thing but phrased it differently from the employer. This is the state the whole extraction feature exists for.",
+      "Quoted requirement text reproduces the employer's exact phrasing; unquoted text is paraphrase."
+    ],
+    "student": {
+      "name": "Jordan Whitfield",
+      "school": "CU Boulder, Leeds School of Business",
+      "major": "Marketing",
+      "classYear": "Junior",
+      "expectedGraduation": "2028-05",
+      "resumeVersions": [
+        {
+          "name": "Business Analytics v3",
+          "note": "Leads with coursework and the retention project",
+          "used": 6
+        },
+        {
+          "name": "Marketing v2",
+          "note": "Leads with the campaign class project",
+          "used": 3
+        },
+        {
+          "name": "General v1",
+          "note": "First version, from the career center workshop",
+          "used": 1
+        }
+      ]
+    }
+  },
+  "tiers": {
+    "Priority": "Contested: hundreds of applicants for a handful of seats. Applying requires writing one line about one requirement (D4).",
+    "Basic": "Middle of the market, most of the volume. Triaged in a swipe deck, applied to with a resume.",
+    "Last Call": "Closing inside three days AND still unapplied (D10). The only tier that push-notifies (D11)."
+  },
+  "requirementStates": {
+    "met": "Present on the resume, in terms the employer would recognize.",
+    "reword": "Present on the resume, phrased differently from the posting. A ~15-second fix.",
+    "missing": "Genuinely absent. Becomes a prep step."
+  },
+  "postings": [
+    {
+      "id": "schwab",
+      "tier": "Priority",
+      "company": "Charles Schwab",
+      "title": "Wealth Management Summer Analyst",
+      "location": "Lone Tree, CO",
+      "term": "Summer 2027",
+      "pay": "$30/hr",
+      "source": "Handshake",
+      "applicants": 680,
+      "seats": 24,
+      "cuHired": 11,
+      "deadline": "2027-09-23",
+      "body": "Shadow a branch team through a full quarter: client review prep, portfolio reporting, and the licensing track offered to summer analysts.",
+      "requirements": [
+        {
+          "state": "met",
+          "text": "Pursuing a bachelor's in business, finance, or economics",
+          "yours": "Leeds School of Business, Marketing, class of 2028"
+        },
+        {
+          "state": "met",
+          "text": "Comfort building and maintaining models in Excel",
+          "yours": "Built a three-year revenue model in BCOR 2500"
+        },
+        {
+          "state": "reword",
+          "text": "\"Client-facing communication experience\"",
+          "yours": "Led 8 customer interviews for the pass-holder retention project"
+        },
+        {
+          "state": "reword",
+          "text": "\"Comfort presenting to senior stakeholders\"",
+          "yours": "Presented final analysis to the course sponsor panel"
+        },
+        {
+          "state": "missing",
+          "text": "Progress toward the SIE or Series 7 exam",
+          "yours": ""
+        },
+        {
+          "state": "missing",
+          "text": "Prior internship in financial services",
+          "yours": ""
+        },
+        {
+          "state": "met",
+          "text": "Graduating between December 2027 and June 2028",
+          "yours": "Expected May 2028"
+        }
+      ]
+    },
+    {
+      "id": "vail",
+      "tier": "Priority",
+      "company": "Vail Resorts",
+      "title": "Marketing Analytics Intern",
+      "location": "Broomfield, CO",
+      "term": "Summer 2027",
+      "pay": "Paid",
+      "source": "Handshake",
+      "applicants": 512,
+      "seats": 9,
+      "cuHired": 4,
+      "deadline": "2026-08-27",
+      "body": "Own reporting for one campaign channel: weekly performance readouts, a segmentation pass, and support on pass-holder retention analysis.",
+      "requirements": [
+        {
+          "state": "met",
+          "text": "Coursework in marketing analytics or statistics",
+          "yours": "MKTG 3050, Marketing Analytics"
+        },
+        {
+          "state": "met",
+          "text": "Survey design and interpretation",
+          "yours": "Designed the 400-response retention survey"
+        },
+        {
+          "state": "reword",
+          "text": "\"Experience translating data into a recommendation\"",
+          "yours": "Wrote the final recommendation memo for the retention project"
+        },
+        {
+          "state": "missing",
+          "text": "Tableau or Power BI",
+          "yours": ""
+        },
+        {
+          "state": "missing",
+          "text": "A/B testing experience",
+          "yours": ""
+        },
+        {
+          "state": "missing",
+          "text": "SQL",
+          "yours": ""
+        }
+      ]
+    },
+    {
+      "id": "arrow",
+      "tier": "Basic",
+      "company": "Arrow Electronics",
+      "title": "Financial Analyst Intern",
+      "location": "Centennial, CO",
+      "term": "Summer 2027",
+      "pay": "$25/hr",
+      "source": "Handshake",
+      "applicants": 96,
+      "seats": 12,
+      "cuHired": 9,
+      "deadline": "2026-09-10",
+      "body": "Support the FP&A team through a quarterly close: variance analysis, model upkeep, and one independent project for the finance director.",
+      "requirements": [
+        {
+          "state": "met",
+          "text": "Business or finance major",
+          "yours": "Leeds, Marketing"
+        },
+        {
+          "state": "met",
+          "text": "Excel proficiency",
+          "yours": "Three-year revenue model, BCOR 2500"
+        },
+        {
+          "state": "reword",
+          "text": "\"Detail orientation under deadline\"",
+          "yours": "Managed the project timeline for a four-person team"
+        },
+        {
+          "state": "missing",
+          "text": "Accounting coursework",
+          "yours": ""
+        }
+      ]
+    },
+    {
+      "id": "trimble",
+      "tier": "Basic",
+      "company": "Trimble",
+      "title": "Product Marketing Intern",
+      "location": "Westminster, CO",
+      "term": "Summer 2027",
+      "pay": "Hybrid",
+      "source": "Public board",
+      "applicants": 74,
+      "seats": 6,
+      "cuHired": 2,
+      "deadline": "2026-09-18",
+      "body": "Work launch material for one product line: competitive research, customer interview notes, and a first draft of the sales one-pager.",
+      "requirements": [
+        {
+          "state": "met",
+          "text": "Marketing coursework",
+          "yours": "MKTG 3050 and MKTG 3250"
+        },
+        {
+          "state": "met",
+          "text": "Customer research experience",
+          "yours": "8 customer interviews, retention project"
+        },
+        {
+          "state": "reword",
+          "text": "\"Writing for a technical audience\"",
+          "yours": "Wrote the technical appendix for the analytics report"
+        },
+        {
+          "state": "missing",
+          "text": "SQL basics",
+          "yours": ""
+        }
+      ]
+    },
+    {
+      "id": "ball",
+      "tier": "Basic",
+      "company": "Ball Aerospace",
+      "title": "Communications & Outreach Intern",
+      "location": "Broomfield, CO",
+      "term": "Summer 2027",
+      "pay": "$24/hr",
+      "source": "Handshake",
+      "applicants": 61,
+      "seats": 4,
+      "cuHired": 6,
+      "deadline": "2026-09-04",
+      "body": "Support internal communications through one program milestone: newsletter production, event logistics, and a short video brief.",
+      "requirements": [
+        {
+          "state": "met",
+          "text": "Strong written communication",
+          "yours": "Recommendation memo, technical appendix"
+        },
+        {
+          "state": "met",
+          "text": "Event or program support experience",
+          "yours": "Ran logistics for the Leeds case competition"
+        },
+        {
+          "state": "missing",
+          "text": "Adobe Creative Suite",
+          "yours": ""
+        }
+      ]
+    },
+    {
+      "id": "boom",
+      "tier": "Basic",
+      "company": "Boom Supersonic",
+      "title": "Supply Chain Intern",
+      "location": "Denver, CO",
+      "term": "Summer 2027",
+      "pay": "On-site",
+      "source": "Public board",
+      "applicants": 58,
+      "seats": 3,
+      "cuHired": 0,
+      "deadline": "rolling",
+      "body": "Track parts through a build cycle, keep supplier records current, and help run the weekly shortage meeting.",
+      "requirements": [
+        {
+          "state": "met",
+          "text": "Spreadsheet fluency",
+          "yours": "Excel modeling, BCOR 2500"
+        },
+        {
+          "state": "reword",
+          "text": "\"Comfort chasing down answers across teams\"",
+          "yours": "Coordinated four departments for the case competition"
+        },
+        {
+          "state": "missing",
+          "text": "Operations or supply chain coursework",
+          "yours": ""
+        },
+        {
+          "state": "missing",
+          "text": "Prior manufacturing exposure",
+          "yours": ""
+        }
+      ]
+    },
+    {
+      "id": "coors",
+      "tier": "Last Call",
+      "company": "Molson Coors",
+      "title": "Brand Marketing Intern",
+      "location": "Golden, CO",
+      "term": "Summer 2027",
+      "pay": "$26/hr",
+      "source": "Handshake",
+      "applicants": 187,
+      "seats": 5,
+      "cuHired": 7,
+      "hoursLeft": 41,
+      "body": "Sit with one brand team through a seasonal campaign: competitive tracking, retail audit, and the post-campaign readout.",
+      "requirements": [
+        {
+          "state": "met",
+          "text": "Marketing or communications major",
+          "yours": "Leeds, Marketing"
+        },
+        {
+          "state": "met",
+          "text": "Consumer research exposure",
+          "yours": "400-response retention survey"
+        },
+        {
+          "state": "reword",
+          "text": "\"Comfort with retail or field work\"",
+          "yours": "Completed a store-level audit for MKTG 3250"
+        },
+        {
+          "state": "missing",
+          "text": "Nielsen or IRI data experience",
+          "yours": ""
+        }
+      ]
+    },
+    {
+      "id": "cdot",
+      "tier": "Last Call",
+      "company": "Colorado DOT",
+      "title": "Communications Intern",
+      "location": "Denver, CO",
+      "term": "Summer 2027",
+      "pay": "$21/hr",
+      "source": "Public board",
+      "applicants": 44,
+      "seats": 2,
+      "cuHired": 3,
+      "hoursLeft": 19,
+      "body": "Support public information for two active projects: community meeting materials, social copy, and the weekly construction bulletin.",
+      "requirements": [
+        {
+          "state": "met",
+          "text": "Writing samples required",
+          "yours": "Recommendation memo, technical appendix"
+        },
+        {
+          "state": "met",
+          "text": "Colorado residency or in-state enrollment",
+          "yours": "CU Boulder, in-state"
+        },
+        {
+          "state": "missing",
+          "text": "Public sector or government experience",
+          "yours": ""
+        }
+      ]
+    },
+    {
+      "id": "botanic",
+      "tier": "Last Call",
+      "company": "Denver Botanic Gardens",
+      "title": "Membership Marketing Intern",
+      "location": "Denver, CO",
+      "term": "Summer 2027",
+      "pay": "$20/hr",
+      "source": "Public board",
+      "applicants": 31,
+      "seats": 2,
+      "cuHired": 1,
+      "hoursLeft": 63,
+      "body": "Help run the spring membership drive: email calendar, renewal segmentation, and on-site member events.",
+      "requirements": [
+        {
+          "state": "met",
+          "text": "Email marketing or CRM familiarity",
+          "yours": "Managed the campaign email calendar in MKTG 3250"
+        },
+        {
+          "state": "reword",
+          "text": "\"Segmentation experience\"",
+          "yours": "Built the four-segment audience model for the retention project"
+        },
+        {
+          "state": "missing",
+          "text": "Nonprofit experience",
+          "yours": ""
+        }
+      ]
+    }
+  ],
+  "prepSteps": [
+    {
+      "id": "p1",
+      "title": "Turn two class projects into three resume lines.",
+      "body": "You listed BCOR 2500 and the marketing analytics project, but neither is on your resume. Every requirement is matched against what is written down.",
+      "unlocks": "Raises your match on 14 open postings, including Arrow and Trimble.",
+      "effort": "25 minutes, guided template"
+    },
+    {
+      "id": "p2",
+      "title": "Learn enough SQL to clear the filter.",
+      "body": "SQL is the single most common missing requirement across your board. The career center runs a two-session workshop in September.",
+      "unlocks": "Moves 9 postings out of the missing column, including Vail.",
+      "effort": "2 sessions, Sept 9 and 16"
+    }
+  ],
+  "applications": [
+    {
+      "id": "a1",
+      "company": "Arrow Electronics",
+      "title": "Financial Analyst Intern",
+      "status": "Interview",
+      "synced": true,
+      "note": "Second round, virtual",
+      "due": "Sept 2, 10:00",
+      "resume": "Business Analytics v3",
+      "urgent": true
+    },
+    {
+      "id": "a2",
+      "company": "Molson Coors",
+      "title": "Brand Marketing Intern",
+      "status": "Applied",
+      "synced": false,
+      "note": "No response yet, 11 days",
+      "due": "Follow up Aug 27",
+      "resume": "Marketing v2",
+      "urgent": true,
+      "nudge": true
+    },
+    {
+      "id": "a3",
+      "company": "Ball Aerospace",
+      "title": "Communications & Outreach Intern",
+      "status": "Draft",
+      "synced": true,
+      "note": "Resume picked, essay unfinished",
+      "due": "Closes Sept 4",
+      "resume": "General v1"
+    },
+    {
+      "id": "a4",
+      "company": "Trimble",
+      "title": "Product Marketing Intern",
+      "status": "Applied",
+      "synced": true,
+      "note": "Referred by a Leeds alum",
+      "due": "Sent Aug 14",
+      "resume": "Business Analytics v3"
+    },
+    {
+      "id": "a5",
+      "company": "Boom Supersonic",
+      "title": "Supply Chain Intern",
+      "status": "Closed",
+      "synced": false,
+      "note": "Position filled",
+      "due": "Aug 8",
+      "resume": "General v1"
+    }
+  ],
+  "mentors": [
+    {
+      "initials": "DM",
+      "name": "Dana Merrill",
+      "role": "Senior Finance Manager, Arrow Electronics",
+      "leedsYear": 2016,
+      "major": "Finance",
+      "why": "Works in the group you applied to. Has mentored three Leeds students, two of whom she referred."
+    },
+    {
+      "initials": "PO",
+      "name": "Priya Oduya",
+      "role": "Director of Brand, Vail Resorts",
+      "leedsYear": 2013,
+      "major": "Marketing",
+      "why": "Inside one of your two Priority postings. Runs the Denver Leeds meetup."
+    },
+    {
+      "initials": "RC",
+      "name": "Ray Castellanos",
+      "role": "Program Manager, Ball Aerospace",
+      "leedsYear": 2019,
+      "major": "Business Analytics",
+      "why": "Closest to your class year. Went through the same internship program as a junior."
+    }
+  ]
+}
