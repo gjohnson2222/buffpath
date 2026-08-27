@@ -39,3 +39,6 @@ Wrapping `prototypes/BuffPath Internships v2.dc.html` so a non-technical reviewe
 - No Node/npm/Python-babel available locally on this machine — the JSX precompile was done via a throwaway browser tab loading Babel Standalone from CDN once, output saved to disk, CDN dependency then fully removed from the shipped file.
 - `git` and `curl` are available locally; `node`/`npm`/`npx` are not.
 - User is a beginner to this whole workflow (folders, git, deployment) — has said explicitly to explain things step by step, high-school-explainer style, not jargon-first.
+
+## Deploy troubleshooting note (2026-08-27)
+Vercel's GitHub auto-deploy wasn't connected initially; reconnected via Settings > Git, then removed/re-added the buffpath-eight.vercel.app domain to force a clean rebind. This commit exists specifically to trigger a genuinely fresh deployment (not a Redeploy-of-old-commit) to confirm the fix worked.
