@@ -3304,5 +3304,331 @@ class Component extends DCLogic {
   }
 }
 </script>
+
+<!-- ============================================================
+     REVIEW LAYER — added on top of the app, not part of it.
+     Everything below is namespaced under #bp-rv-root / bp-rv- /
+     window.__bpReview / localStorage key "bp-review-pins-v1" so it
+     cannot collide with the app's own #dc-root, .btn/.card/.tag
+     classes, or globals. Toggle it off and the app underneath is
+     untouched — this whole block adds a layer, it edits nothing.
+     ============================================================ -->
+<style id="bp-rv-style">
+  #bp-rv-root, #bp-rv-root * { box-sizing: border-box; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; }
+  #bp-rv-root h3, #bp-rv-root p, #bp-rv-root a, #bp-rv-root button,
+  #bp-rv-root input, #bp-rv-root textarea, #bp-rv-root select, #bp-rv-root label {
+    margin: 0; padding: 0; border: none; background: none; color: inherit;
+    font: inherit; line-height: 1.4; text-decoration: none;
+  }
+  #bp-rv-root { position: fixed; inset: 0; pointer-events: none; z-index: 2147483000; }
+  .bp-rv-fab {
+    position: fixed; right: 20px; bottom: 20px; pointer-events: auto;
+    display: flex; align-items: center; gap: 10px;
+    background: #14151a; color: #fff; border-radius: 999px;
+    padding: 10px 16px 10px 14px; box-shadow: 0 6px 20px rgba(0,0,0,.35);
+    cursor: pointer; font-size: 13px; font-weight: 600; user-select: none;
+  }
+  .bp-rv-fab[data-active="1"] { background: #5b3df5; }
+  .bp-rv-fab .bp-rv-dot { width: 9px; height: 9px; border-radius: 50%; background: #666; flex: none; }
+  .bp-rv-fab[data-active="1"] .bp-rv-dot { background: #ffd23f; animation: bp-rv-pulse 1.4s infinite; }
+  @keyframes bp-rv-pulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+  .bp-rv-count {
+    background: rgba(255,255,255,.18); border-radius: 999px; padding: 2px 8px; font-size: 11px;
+  }
+  .bp-rv-banner {
+    position: fixed; top: 0; left: 0; right: 0; pointer-events: none;
+    text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; color: #fff; background: #5b3df5; padding: 6px 0;
+    display: none;
+  }
+  .bp-rv-banner[data-show="1"] { display: block; }
+  .bp-rv-pin {
+    position: fixed; pointer-events: auto; width: 26px; height: 26px; margin-left: -13px; margin-top: -13px;
+    border-radius: 50% 50% 50% 4px; transform: rotate(-45deg);
+    background: #5b3df5; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.4);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .bp-rv-pin[data-sev="blocker"] { background: #e0245e; }
+  .bp-rv-pin[data-sev="nitpick"] { background: #6b7280; }
+  .bp-rv-pin span { transform: rotate(45deg); color: #fff; font-size: 11px; font-weight: 800; }
+  .bp-rv-modal-backdrop {
+    position: fixed; inset: 0; background: rgba(10,10,15,.5); pointer-events: auto;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .bp-rv-modal {
+    background: #fff; color: #14151a; width: 100%; max-width: 380px; border-radius: 14px;
+    padding: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.4); max-height: 86vh; overflow: auto;
+  }
+  .bp-rv-modal h3 { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+  .bp-rv-modal .bp-rv-sub { font-size: 12px; color: #6b7280; margin-bottom: 14px; }
+  .bp-rv-field { margin-bottom: 12px; }
+  .bp-rv-field label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; margin-bottom: 6px; }
+  .bp-rv-field textarea, .bp-rv-field select {
+    width: 100%; border: 1.5px solid #d8d8dc; border-radius: 8px; padding: 8px 10px; font-size: 13px;
+  }
+  .bp-rv-field textarea { resize: vertical; min-height: 64px; }
+  .bp-rv-row { display: flex; gap: 8px; }
+  .bp-rv-row > * { flex: 1; }
+  .bp-rv-actions { display: flex; gap: 8px; margin-top: 16px; }
+  .bp-rv-btn { flex: 1; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; }
+  .bp-rv-btn-primary { background: #5b3df5; color: #fff; }
+  .bp-rv-btn-secondary { background: #f0f0f3; color: #14151a; }
+  .bp-rv-btn-danger { background: #fdecef; color: #e0245e; }
+  .bp-rv-panel {
+    position: fixed; right: 20px; bottom: 76px; width: 300px; max-height: 60vh;
+    background: #fff; border-radius: 14px; box-shadow: 0 20px 50px rgba(0,0,0,.35);
+    overflow: auto; pointer-events: auto; display: none;
+  }
+  .bp-rv-panel[data-show="1"] { display: block; }
+  .bp-rv-panel-head { padding: 12px 14px; border-bottom: 1px solid #eee; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; }
+  .bp-rv-item { padding: 10px 14px; border-bottom: 1px solid #f2f2f4; font-size: 12px; color: #14151a; cursor: pointer; }
+  .bp-rv-item:hover { background: #fafafc; }
+  .bp-rv-item .bp-rv-badge { display: inline-block; font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; margin-right: 6px; background: #f0f0f3; }
+  .bp-rv-item .bp-rv-badge[data-sev="blocker"] { background: #fdecef; color: #e0245e; }
+  .bp-rv-item .bp-rv-badge[data-sev="worth-fixing"] { background: #fff4e0; color: #b45309; }
+  .bp-rv-item .bp-rv-badge[data-sev="nitpick"] { background: #eef0ff; color: #4338ca; }
+  .bp-rv-item .bp-rv-screen { color: #9ca3af; font-size: 10px; margin-top: 3px; }
+  .bp-rv-empty { padding: 20px 14px; font-size: 12px; color: #9ca3af; text-align: center; }
+</style>
+
+<div id="bp-rv-root">
+  <div class="bp-rv-banner" id="bp-rv-banner">Comment mode is on — click anything to leave a pin</div>
+  <div class="bp-rv-fab" id="bp-rv-fab" data-active="0">
+    <span class="bp-rv-dot"></span>
+    <span id="bp-rv-fab-label">Comment mode: off</span>
+    <span class="bp-rv-count" id="bp-rv-count">0</span>
+  </div>
+  <div class="bp-rv-panel" id="bp-rv-panel">
+    <div class="bp-rv-panel-head">Pins</div>
+    <div id="bp-rv-list"></div>
+  </div>
+</div>
+
+<script id="bp-rv-script">
+(function () {
+  "use strict";
+  var STORE_KEY = "bp-review-pins-v1";
+  var state = { active: false, pins: [] };
+
+  function load() {
+    try {
+      var raw = window.localStorage.getItem(STORE_KEY);
+      state.pins = raw ? JSON.parse(raw) : [];
+    } catch (e) { state.pins = []; }
+  }
+  function save() {
+    try { window.localStorage.setItem(STORE_KEY, JSON.stringify(state.pins)); } catch (e) {}
+  }
+
+  function screenLabelFor(el) {
+    var node = el;
+    while (node && node !== document.body) {
+      var sib = node;
+      while (sib) {
+        var h = (sib.matches && sib.matches("h2,h3")) ? sib : (sib.querySelector ? sib.querySelector("h2,h3") : null);
+        if (h && h.textContent.trim()) return h.textContent.trim().slice(0, 60);
+        sib = sib.previousElementSibling;
+      }
+      node = node.parentElement;
+    }
+    return document.title || "Unknown screen";
+  }
+
+  function fingerprint(el) {
+    var text = (el.textContent || "").trim().slice(0, 80);
+    var tag = el.tagName.toLowerCase();
+    var siblings = Array.prototype.filter.call(
+      document.querySelectorAll(tag),
+      function (n) { return (n.textContent || "").trim().slice(0, 80) === text; }
+    );
+    var index = siblings.indexOf(el);
+    return { tag: tag, text: text, index: index < 0 ? 0 : index };
+  }
+
+  function resolveFingerprint(fp) {
+    var candidates = Array.prototype.filter.call(
+      document.querySelectorAll(fp.tag),
+      function (n) { return (n.textContent || "").trim().slice(0, 80) === fp.text; }
+    );
+    return candidates[fp.index] || candidates[0] || null;
+  }
+
+  function fab() { return document.getElementById("bp-rv-fab"); }
+  function banner() { return document.getElementById("bp-rv-banner"); }
+  function panel() { return document.getElementById("bp-rv-panel"); }
+
+  function setActive(v) {
+    state.active = v;
+    fab().setAttribute("data-active", v ? "1" : "0");
+    document.getElementById("bp-rv-fab-label").textContent = "Comment mode: " + (v ? "on" : "off");
+    banner().setAttribute("data-show", v ? "1" : "0");
+  }
+
+  function updateCount() {
+    document.getElementById("bp-rv-count").textContent = String(state.pins.length);
+  }
+
+  function closeModal() {
+    var b = document.getElementById("bp-rv-modal-backdrop");
+    if (b) b.remove();
+  }
+
+  function openModal(pin, isNew) {
+    closeModal();
+    var backdrop = document.createElement("div");
+    backdrop.className = "bp-rv-modal-backdrop";
+    backdrop.id = "bp-rv-modal-backdrop";
+    backdrop.innerHTML =
+      '<div class="bp-rv-modal">' +
+        '<h3>' + (isNew ? "New pin #" + pin.n : "Pin #" + pin.n) + '</h3>' +
+        '<div class="bp-rv-sub">' + escapeHtml(pin.screen) + '</div>' +
+        '<div class="bp-rv-field"><label>Comment</label><textarea id="bp-rv-f-text" placeholder="What did you notice?"></textarea></div>' +
+        '<div class="bp-rv-row">' +
+          '<div class="bp-rv-field"><label>Category</label><select id="bp-rv-f-cat">' +
+            ["ux","feature-gap","data-dependency","decision-challenge","bug"].map(function(c){return '<option value="'+c+'">'+c+'</option>';}).join("") +
+          '</select></div>' +
+          '<div class="bp-rv-field"><label>Severity</label><select id="bp-rv-f-sev">' +
+            ["blocker","worth-fixing","nitpick"].map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join("") +
+          '</select></div>' +
+        '</div>' +
+        '<div class="bp-rv-actions">' +
+          (isNew ? '' : '<div class="bp-rv-btn bp-rv-btn-danger" id="bp-rv-f-delete">Delete</div>') +
+          '<div class="bp-rv-btn bp-rv-btn-secondary" id="bp-rv-f-cancel">Cancel</div>' +
+          '<div class="bp-rv-btn bp-rv-btn-primary" id="bp-rv-f-save">Save</div>' +
+        '</div>' +
+      '</div>';
+    document.getElementById("bp-rv-root").appendChild(backdrop);
+    document.getElementById("bp-rv-f-text").value = pin.text || "";
+    document.getElementById("bp-rv-f-cat").value = pin.category || "ux";
+    document.getElementById("bp-rv-f-sev").value = pin.severity || "worth-fixing";
+    document.getElementById("bp-rv-f-cancel").onclick = function () {
+      if (isNew) state.pins = state.pins.filter(function (p) { return p.id !== pin.id; });
+      closeModal(); render();
+    };
+    var del = document.getElementById("bp-rv-f-delete");
+    if (del) del.onclick = function () {
+      state.pins = state.pins.filter(function (p) { return p.id !== pin.id; });
+      save(); closeModal(); render();
+    };
+    document.getElementById("bp-rv-f-save").onclick = function () {
+      pin.text = document.getElementById("bp-rv-f-text").value;
+      pin.category = document.getElementById("bp-rv-f-cat").value;
+      pin.severity = document.getElementById("bp-rv-f-sev").value;
+      if (!isNew || pin.text.trim()) {
+        if (isNew && state.pins.indexOf(pin) === -1) state.pins.push(pin);
+        save();
+      } else {
+        state.pins = state.pins.filter(function (p) { return p.id !== pin.id; });
+      }
+      closeModal(); render();
+    };
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function positionPins() {
+    var layer = document.getElementById("bp-rv-pins-layer");
+    if (!layer) return;
+    layer.innerHTML = "";
+    state.pins.forEach(function (pin) {
+      var el = resolveFingerprint(pin.fp);
+      if (!el) return;
+      var r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) return;
+      var x = r.left + r.width * pin.relX;
+      var y = r.top + r.height * pin.relY;
+      var dot = document.createElement("div");
+      dot.className = "bp-rv-pin";
+      dot.setAttribute("data-sev", pin.severity);
+      dot.style.left = x + "px";
+      dot.style.top = y + "px";
+      dot.innerHTML = "<span>" + pin.n + "</span>";
+      dot.onclick = function (ev) { ev.stopPropagation(); ev.preventDefault(); openModal(pin, false); };
+      layer.appendChild(dot);
+    });
+  }
+
+  function renderList() {
+    var list = document.getElementById("bp-rv-list");
+    if (!state.pins.length) {
+      list.innerHTML = '<div class="bp-rv-empty">No pins yet. Turn on comment mode and click anything in the app.</div>';
+      return;
+    }
+    list.innerHTML = state.pins.slice().reverse().map(function (p) {
+      return '<div class="bp-rv-item" data-id="' + p.id + '">' +
+        '<span class="bp-rv-badge" data-sev="' + p.severity + '">' + p.severity + '</span>' +
+        '<span class="bp-rv-badge">' + p.category + '</span>' +
+        '<div>#' + p.n + ' — ' + escapeHtml((p.text || "(no comment)").slice(0, 60)) + '</div>' +
+        '<div class="bp-rv-screen">' + escapeHtml(p.screen) + '</div>' +
+      '</div>';
+    }).join("");
+    Array.prototype.forEach.call(list.querySelectorAll(".bp-rv-item"), function (node) {
+      node.onclick = function () {
+        var id = node.getAttribute("data-id");
+        var pin = state.pins.filter(function (p) { return p.id === id; })[0];
+        if (pin) openModal(pin, false);
+      };
+    });
+  }
+
+  function render() {
+    updateCount();
+    positionPins();
+    renderList();
+  }
+
+  function onDocClick(ev) {
+    if (!state.active) return;
+    if (ev.target.closest && ev.target.closest("#bp-rv-root")) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    var el = ev.target;
+    var rect = el.getBoundingClientRect();
+    var relX = rect.width ? (ev.clientX - rect.left) / rect.width : 0.5;
+    var relY = rect.height ? (ev.clientY - rect.top) / rect.height : 0.5;
+    var pin = {
+      id: "p" + Date.now() + Math.random().toString(36).slice(2, 7),
+      n: state.pins.length + 1,
+      screen: screenLabelFor(el),
+      fp: fingerprint(el),
+      relX: relX, relY: relY,
+      text: "", category: "ux", severity: "worth-fixing",
+      ts: new Date().toISOString()
+    };
+    openModal(pin, true);
+  }
+
+  function init() {
+    load();
+    var layer = document.createElement("div");
+    layer.id = "bp-rv-pins-layer";
+    layer.style.position = "fixed";
+    layer.style.inset = "0";
+    layer.style.pointerEvents = "none";
+    document.getElementById("bp-rv-root").appendChild(layer);
+    Array.prototype.forEach.call(layer.parentNode.querySelectorAll(".bp-rv-pin"), function (n) { n.style.pointerEvents = "auto"; });
+
+    fab().addEventListener("click", function () { setActive(!state.active); });
+    panel().addEventListener("click", function (ev) { ev.stopPropagation(); });
+    document.getElementById("bp-rv-count").parentElement.addEventListener("dblclick", function (ev) {
+      ev.stopPropagation();
+      panel().setAttribute("data-show", panel().getAttribute("data-show") === "1" ? "0" : "1");
+    });
+    document.addEventListener("click", onDocClick, true);
+    window.addEventListener("resize", positionPins);
+    window.addEventListener("scroll", positionPins, true);
+    setInterval(positionPins, 600);
+    render();
+    window.__bpReview = { getPins: function () { return state.pins.slice(); } };
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+</script>
 </body>
 </html>
