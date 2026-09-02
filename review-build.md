@@ -45,3 +45,10 @@ Vercel's GitHub auto-deploy wasn't connected initially; reconnected via Settings
 
 Confirmed: GitHub connection to Vercel was not actually established until just now (Settings > Git showed "Connected just now" after the fix) — every prior redeploy/push attempt before this had no live webhook to trigger. This commit is the first real test of the fixed connection.
 Root Directory setting fixed (was literally "review" with quote characters included, now just review). Triggering deploy to confirm.
+
+## Learning queue (2026-09-02)
+
+Bookmarked, in progress across sessions:
+1. Basic JavaScript — not started
+2. Git branches and pull requests — in progress (this section was written on a branch, as the demo)
+3. Generalizing the Vercel debugging lesson (verify from an independent angle, don't trust one source) — not yet formally taught
