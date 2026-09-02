@@ -12,7 +12,7 @@ This project has one rule: **the `.dc.html` prototypes are the only source of tr
 
 ```
 README.md                  this file
-PROJECT-RULES.md           ground rules (rename to CLAUDE.md at a project root)
+CLAUDE.md                  ground rules — auto-loads into every Claude Code session in this folder
 docs/
   decisions.md             16 decisions, rationale, what would reverse each
   product.md               screen-by-screen mechanics
