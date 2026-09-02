@@ -50,5 +50,5 @@ Root Directory setting fixed (was literally "review" with quote characters inclu
 
 Bookmarked, in progress across sessions:
 1. Basic JavaScript — not started
-2. Git branches and pull requests — in progress (this section was written on a branch, as the demo)
+2. Git branches and pull requests — done (completed a full branch → PR → merge → pull cycle)
 3. Generalizing the Vercel debugging lesson (verify from an independent angle, don't trust one source) — not yet formally taught
